@@ -1,5 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:remote_tmdb_kit/src/dtos.dart';
+import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_actor_model.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_movie_response.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_cast_response.dart';
 
 void main() {
   group('RemoteMovieModel.fromJson', () {
@@ -118,5 +122,27 @@ void main() {
         expect(response.cast.first.name, 'Christian Bale');
       },
     );
+  });
+
+  group('MovieSearchFilter', () {
+    test('toQueryParameters returns only non-null values', () {
+      const filter = MovieSearchFilter(
+        includeAdult: false,
+        primaryReleaseYear: 2024,
+      );
+      final queryParams = filter.toQueryParameters();
+      expect(queryParams, <String, dynamic>{
+        'include_adult': false,
+        'primary_release_year': 2024,
+      });
+      expect(queryParams.containsKey('language'), isFalse);
+    });
+
+    test('copyWith copies parameters correctly', () {
+      const filter = MovieSearchFilter(includeAdult: false);
+      final updated = filter.copyWith(primaryReleaseYear: 2024);
+      expect(updated.includeAdult, isFalse);
+      expect(updated.primaryReleaseYear, 2024);
+    });
   });
 }

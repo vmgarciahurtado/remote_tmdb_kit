@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
+import 'package:remote_tmdb_kit/src/helpers/repository_helper.dart';
 
 void main() {
   group('executeRepositoryCall', () {

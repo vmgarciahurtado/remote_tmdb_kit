@@ -4,16 +4,18 @@ Este directorio contiene un ejemplo básico de uso del paquete `remote_tmdb_kit`
 
 ## Ejemplo de Uso
 
-Aquí tienes un ejemplo de cómo instanciar el cliente y consultar películas populares usando el patrón `Result` expuesto por el paquete:
+Aquí tienes un ejemplo de cómo instanciar el cliente, realizar búsquedas con filtros avanzados y consultar películas populares usando el patrón `Result` expuesto por el paquete:
 
 ```dart
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 
 void main() async {
-  // 1. Inicializa el repositorio con tu API Key de TMDB
+  // 1. Inicializa el repositorio con tu API Key de TMDB.
+  // El parámetro `enableLogging` es opcional (por defecto es false).
   final repository = MovieRepository.create(
-    apiKey: '9b31efe96a35c640012f380f12ee2b86', // Reemplaza con tu clave
-    language: 'es-ES', // Opcional (por defecto es 'es-ES')
+    apiKey: 'TU_API_KEY_DE_TMDB', // Reemplaza con tu clave
+    enableLogging: false, 
+    language: 'es-ES',
   );
 
   // 2. Consulta las películas populares (página 1)
@@ -30,7 +32,27 @@ void main() async {
     case FailureResult(failure: final failure):
       print('Ocurrió un error al consultar la API:');
       print('  - Mensaje amigable: ${failure.userMessage}');
-      print('  - Excepción detallada: ${failure.toString()}');
+  }
+
+  // 4. Realizar una búsqueda con filtros avanzados
+  final filter = MovieSearchFilter(
+    includeAdult: false,
+    primaryReleaseYear: 2024,
+    language: 'es-ES',
+  );
+
+  final Result<List<Movie>> searchResult = await repository.searchMovies(
+    'Spider-Man',
+    page: 1,
+    filter: filter,
+  );
+
+  if (searchResult is Success<List<Movie>>) {
+    final searchMovies = searchResult.data;
+    print('\nBúsqueda filtrada de Spider-Man (2024):');
+    for (final movie in searchMovies) {
+      print('  - ${movie.title} (${movie.releaseDate})');
+    }
   }
 }
 ```

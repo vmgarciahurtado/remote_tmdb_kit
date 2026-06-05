@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
-import 'package:remote_tmdb_kit/src/image_url_resolver.dart';
+import 'package:remote_tmdb_kit/src/services/image_url_resolver.dart';
 
 class FakeHttpService implements HttpService {
   late Object? response;
@@ -121,7 +121,35 @@ void main() {
         expect(movies.first.title, 'Batman');
         expect(fakeHttpService.lastPath, 'search/movie');
         expect(fakeHttpService.lastMethod, HttpMethod.get);
-        expect(fakeHttpService.lastQueryParameters, {'query': 'batman'});
+        expect(fakeHttpService.lastQueryParameters, <String, dynamic>{
+          'query': 'batman',
+          'page': 1,
+        });
+      },
+    );
+
+    test(
+      'given a filter when searchMovies is called '
+      'then includes filter parameters in query parameters',
+      () async {
+        fakeHttpService.response = _tMovieResponseJson();
+
+        final Result<List<Movie>> result = await repository.searchMovies(
+          'batman',
+          page: 2,
+          filter: const MovieSearchFilter(
+            includeAdult: false,
+            primaryReleaseYear: 2024,
+          ),
+        );
+
+        expect(result, isA<Success<List<Movie>>>());
+        expect(fakeHttpService.lastQueryParameters, <String, dynamic>{
+          'query': 'batman',
+          'page': 2,
+          'include_adult': false,
+          'primary_release_year': 2024,
+        });
       },
     );
   });
@@ -147,6 +175,18 @@ void main() {
         expect(fakeHttpService.lastMethod, HttpMethod.get);
       },
     );
+  });
+
+  group('MovieRepository.create', () {
+    test('creates a MovieRepository instance with default logging to false', () {
+      final repo = MovieRepository.create(apiKey: 'test_key');
+      expect(repo, isA<MovieRepository>());
+    });
+
+    test('creates a MovieRepository instance with logging enabled', () {
+      final repo = MovieRepository.create(apiKey: 'test_key', enableLogging: true);
+      expect(repo, isA<MovieRepository>());
+    });
   });
 }
 

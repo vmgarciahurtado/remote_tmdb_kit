@@ -2,7 +2,7 @@
 
 Un paquete de Dart/Flutter altamente cohesivo, desacoplado y listo para **pub.dev** que encapsula la integración con la API de películas de The Movie Database (TMDB).
 
-Este paquete está diseñado bajo principios de arquitectura limpia, aislando por completo al cliente de detalles HTTP complejos (como cabeceras y códigos de estado) y exponiendo un control de flujo funcional basado en el patrón `Result`.
+Este paquete está diseñado bajo principios de arquitectura limpia, aislando por completo al cliente de detalles HTTP (como cabeceras y códigos de estado) y exponiendo un control de flujo funcional basado en el patrón `Result`.
 
 ---
 
@@ -10,6 +10,9 @@ Este paquete está diseñado bajo principios de arquitectura limpia, aislando po
 
 * **Aislamiento de Errores**: Mapea automáticamente excepciones de red crudas y códigos de respuesta HTTP a fallos tipados (`ConnectionFailure`, `ServerFailure`, etc.) con mensajes en español amigables para el usuario.
 * **Flujo Funcional con Result**: Retorna `Success<T>` o `FailureResult<T>` en cada petición para simplificar y dar seguridad al control de estados en tu interfaz.
+* **Filtros de Búsqueda Avanzados**: Incorpora un modelo inmutable `MovieSearchFilter` para refinar tus búsquedas de películas.
+* **Logger HTTP Opcional**: Registro detallado de peticiones, respuestas y errores en consola desactivado por defecto (`enableLogging = false`).
+* **Documentación en Hover**: Todo el API público está completamente documentado con Dartdoc e incluye ejemplos de código visibles directamente desde tu editor (IDE).
 * **Cliente HTTP Desacoplable**: Viene configurado por defecto con `Dio`, pero la interfaz `HttpService` está abierta para que inyectes cualquier cliente HTTP de tu preferencia (ej. el paquete nativo `http`).
 * **Resolución Automática de Imágenes**: Inyecta dinámicamente un `ImageUrlResolver` para convertir paths parciales de TMDB en URLs absolutas, incluyendo fallback para imágenes no encontradas.
 * **100% Libre de Riverpod o Gestores de Estado**: Puedes consumirlo con Riverpod (ver sección de ejemplos), BLoC, Provider o setState puro.
@@ -19,15 +22,17 @@ Este paquete está diseñado bajo principios de arquitectura limpia, aislando po
 
 ## Estructura de Archivos del Paquete
 
-La estructura interna (`lib/src/`) está organizada en archivos planos y cohesivos de mantenimiento sencillo:
+La estructura interna (`lib/src/`) está dividida de forma modular:
 
-* **`failures.dart`**: Jerarquía de excepciones de negocio.
-* **`result.dart`**: Monada `Result` y manejadores seguros de llamadas a repositorios.
-* **`http_service.dart`**: Abstracciones HTTP, cliente `Dio` por defecto e interceptor de logs en consola.
-* **`models.dart`**: Entidades públicas limpias (`Movie` y `Actor`).
-* **`dtos.dart`**: Modelos de mapeo JSON de TMDB internos (ocultos al exterior).
-* **`image_url_resolver.dart`**: Formateador de URLs de imágenes.
-* **`movie_repository.dart`**: Interfaz de repositorio e implementación concreta de red.
+* **`errors/`**: Jerarquía de excepciones de negocio (`failures.dart`).
+* **`result/`**: Mónada `Result` (`result.dart`).
+* **`network/`**: Abstracciones generales de red (`http_method.dart`, `http_service.dart`) e implementación específica con Dio en su subcarpeta (`dio/dio_http_service.dart`, `dio/logging_interceptor.dart`).
+* **`models/`**: Entidades del dominio de películas y filtros (`movie.dart`, `actor.dart`, `movie_search_filter.dart`).
+* **`dtos/`**: Modelos de mapeo JSON de TMDB internos (`remote_movie_model.dart`, etc. - ocultos al exterior).
+* **`mappers/`**: Conversores estáticos de DTO a Entidad (`remote_movie_mapper.dart`, etc.).
+* **`services/`**: Formateador y resolutor de URLs de imágenes de cartelera (`image_url_resolver.dart`).
+* **`helpers/`**: Utilitarios y helpers de uso interno (`repository_helper.dart`).
+* **`repositories/`**: Interfaz de repositorio e implementación concreta (`movie_repository.dart`, `remote_movie_repository_impl.dart`).
 
 ---
 
@@ -53,13 +58,14 @@ flutter pub get
 
 ### 1. Inicialización Básica (Dio por defecto)
 
-Usa el constructor `MovieRepository.create` y suministra tu `apiKey` de TMDB. No hay claves privadas en el código del paquete:
+Usa el constructor `MovieRepository.create` y suministra tu `apiKey` de TMDB. El parámetro `enableLogging` controla el registro en consola y está en **`false` por defecto**:
 
 ```dart
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 
 final repository = MovieRepository.create(
   apiKey: 'TU_API_KEY_DE_TMDB',
+  enableLogging: false, // Por defecto es false
   language: 'es-ES', // Idioma de los datos devueltos
 );
 ```
@@ -82,6 +88,31 @@ void fetchPopularMovies() async {
     case FailureResult(failure: final failure):
       // El mensaje ya viene traducido y listo para pintar en pantalla
       print('Error al cargar datos: ${failure.userMessage}');
+  }
+}
+```
+
+### 3. Búsqueda con Filtros Avanzados
+
+Usa `MovieSearchFilter` para acotar tus búsquedas en la base de datos de películas de TMDB:
+
+```dart
+void searchActionMovies() async {
+  final filter = MovieSearchFilter(
+    includeAdult: false,
+    primaryReleaseYear: 2024,
+    language: 'es-ES',
+  );
+
+  final Result<List<Movie>> result = await repository.searchMovies(
+    'Batman',
+    page: 1,
+    filter: filter,
+  );
+
+  if (result is Success<List<Movie>>) {
+    final movies = result.data;
+    // ... mostrar listado filtrado
   }
 }
 ```
@@ -143,7 +174,10 @@ final tmdbApiKeyProvider = Provider<String>((ref) {
 // Proveedor del Repositorio
 final movieRepositoryProvider = Provider<MovieRepository>((ref) {
   final apiKey = ref.watch(tmdbApiKeyProvider);
-  return MovieRepository.create(apiKey: apiKey);
+  return MovieRepository.create(
+    apiKey: apiKey,
+    enableLogging: false,
+  );
 });
 
 // Proveedor para obtener películas en cartelera

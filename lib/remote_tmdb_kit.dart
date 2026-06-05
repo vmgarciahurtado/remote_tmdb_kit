@@ -1,6 +1,10 @@
-export 'src/failures.dart';
-export 'src/result.dart';
-export 'src/models.dart';
-export 'src/http_service.dart' show HttpService, HttpMethod;
-export 'src/image_url_resolver.dart';
-export 'src/movie_repository.dart' show MovieRepository, RemoteMovieRepositoryImpl;
+export 'src/errors/failures.dart';
+export 'src/result/result.dart';
+export 'src/models/movie.dart';
+export 'src/models/actor.dart';
+export 'src/models/movie_search_filter.dart';
+export 'src/network/http_service.dart' show HttpService;
+export 'src/network/http_method.dart' show HttpMethod;
+export 'src/services/image_url_resolver.dart';
+export 'src/repositories/movie_repository.dart' show MovieRepository;
+export 'src/repositories/remote_movie_repository_impl.dart' show RemoteMovieRepositoryImpl;

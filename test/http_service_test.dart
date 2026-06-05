@@ -3,7 +3,10 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
-import 'package:remote_tmdb_kit/src/http_service.dart';
+import 'package:remote_tmdb_kit/src/network/http_service.dart';
+import 'package:remote_tmdb_kit/src/network/dio/dio_http_service.dart';
+import 'package:remote_tmdb_kit/src/network/dio/logging_interceptor.dart';
+import 'package:remote_tmdb_kit/src/network/http_method.dart';
 
 // Fake implementations for Interceptor Handlers using noSuchMethod fallback
 class FakeRequestInterceptorHandler implements RequestInterceptorHandler {

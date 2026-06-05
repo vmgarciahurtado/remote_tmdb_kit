@@ -1,50 +1,22 @@
-import 'package:dio/dio.dart';
-import 'dtos.dart';
-import 'http_service.dart';
-import 'image_url_resolver.dart';
-import 'models.dart';
-import 'result.dart';
+import '../dtos/remote_actor_model.dart';
+import '../dtos/remote_cast_response.dart';
+import '../dtos/remote_movie_model.dart';
+import '../dtos/remote_movie_response.dart';
+import '../mappers/remote_actor_mapper.dart';
+import '../mappers/remote_movie_mapper.dart';
+import '../models/actor.dart';
+import '../models/movie.dart';
+import '../models/movie_search_filter.dart';
+import '../network/http_method.dart';
+import '../network/http_service.dart';
+import '../result/result.dart';
+import '../services/image_url_resolver.dart';
+import 'movie_repository.dart';
+import '../helpers/repository_helper.dart';
 
-abstract interface class MovieRepository {
-  Future<Result<List<Movie>>> getNowPlaying({int page = 1});
-  Future<Result<List<Movie>>> getPopular({int page = 1});
-  Future<Result<List<Movie>>> searchMovies(String query);
-  Future<Result<List<Actor>>> getMovieCast(int movieId);
-
-  /// Factory constructor to create a default configured instance of [MovieRepository].
-  factory MovieRepository.create({
-    required String apiKey,
-    String baseUrl = 'https://api.themoviedb.org/3/',
-    String imageBaseUrl = 'https://image.tmdb.org/t/p/w500',
-    String actorImageBaseUrl = 'https://image.tmdb.org/t/p/w185',
-    String noImageUrl = 'https://sd.keepcalms.com/i-w600/keep-calm-poster-not-found.jpg',
-    String language = 'es-ES',
-  }) {
-    final dio = Dio();
-    dio.options.baseUrl = baseUrl;
-    dio.options.queryParameters = {
-      'api_key': apiKey,
-      'language': language,
-    };
-    dio.options.headers['Content-Type'] = 'application/json; charset=utf-8';
-    dio.options.contentType = 'application/json';
-    dio.options.connectTimeout = const Duration(seconds: 5);
-    dio.options.receiveTimeout = const Duration(seconds: 5);
-    
-    dio.interceptors.add(LoggingInterceptor());
-
-    final httpService = DioHttpService(dio);
-    final imageUrlResolver = ImageUrlResolver(
-      imageBaseUrl: imageBaseUrl,
-      actorImageBaseUrl: actorImageBaseUrl,
-      noImageUrl: noImageUrl,
-    );
-
-    return RemoteMovieRepositoryImpl(httpService, imageUrlResolver);
-  }
-}
-
+/// Implementación concreta de [MovieRepository] que consulta la API remota de TMDB.
 class RemoteMovieRepositoryImpl implements MovieRepository {
+  /// Crea una instancia del repositorio a partir de un cliente HTTP y un resolutor de URLs de imágenes.
   const RemoteMovieRepositoryImpl(this._httpService, this._imageUrlResolver);
 
   final HttpService _httpService;
@@ -87,13 +59,22 @@ class RemoteMovieRepositoryImpl implements MovieRepository {
       });
 
   @override
-  Future<Result<List<Movie>>> searchMovies(String query) =>
+  Future<Result<List<Movie>>> searchMovies(
+    String query, {
+    int page = 1,
+    MovieSearchFilter? filter,
+  }) =>
       executeRepositoryCall(() async {
+        final queryParams = <String, dynamic>{
+          'query': query,
+          'page': page,
+          ...?filter?.toQueryParameters(),
+        };
         final Map<String, dynamic> response = await _httpService
             .request<Map<String, dynamic>>(
               'search/movie',
               method: HttpMethod.get,
-              queryParameters: <String, dynamic>{'query': query},
+              queryParameters: queryParams,
             );
         final RemoteMovieResponse data = RemoteMovieResponse.fromJson(response);
         return data.results
