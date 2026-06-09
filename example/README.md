@@ -1,88 +1,95 @@
-# remote_tmdb_kit Example
+# Ejemplo de remote_tmdb_kit
 
-Este directorio contiene un ejemplo básico de uso del paquete `remote_tmdb_kit` en Dart puro.
+App Flutter funcional que **consume el paquete [`remote_tmdb_kit`](../)** para explorar
+películas de TMDB. Demuestra el objetivo del paquete: toda la capa de datos (cliente HTTP,
+mapeo de DTOs, manejo de errores) vive dentro del paquete, y esta app solo aporta la
+interfaz de usuario y el cableado de dependencias.
 
-## Ejemplo de Uso
+## Qué demuestra
 
-Aquí tienes un ejemplo de cómo instanciar el cliente, realizar búsquedas con filtros avanzados y consultar películas populares usando el patrón `Result` expuesto por el paquete:
+* **Estrenos en cartelera** (`getNowPlaying`) en un carrusel superior.
+* **Tendencias / populares** (`getPopular`) en un listado horizontal.
+* **Búsqueda de películas** con *debounce* (`searchMovies`) desde la barra de búsqueda.
+* **Detalle de película** con su reparto (`getMovieCast`).
+* **Manejo de errores tipado**: los estados de error muestran `failure.userMessage`
+  proveniente del paquete.
 
-```dart
-import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
+Todo el acceso a datos pasa por un único punto:
+[`movie_repository_provider.dart`](lib/features/movies/presentation/providers/movie_repository_provider.dart),
+que crea el repositorio del paquete con `MovieRepository.create(apiKey: Env.apiKey)`.
 
-void main() async {
-  // 1. Inicializa el repositorio con tu API Key de TMDB.
-  // El parámetro `enableLogging` es opcional (por defecto es false).
-  final repository = MovieRepository.create(
-    apiKey: 'TU_API_KEY_DE_TMDB', // Reemplaza con tu clave
-    enableLogging: false, 
-    language: 'es-ES',
-  );
+## Requisitos
 
-  // 2. Consulta las películas populares (página 1)
-  final Result<List<Movie>> result = await repository.getPopular(page: 1);
+* Flutter (SDK Dart `^3.11.5`).
+* Una **API key de TMDB**. Puedes obtenerla gratis en
+  [themoviedb.org](https://www.themoviedb.org/settings/api).
 
-  // 3. Maneja los resultados de forma funcional tipada
-  switch (result) {
-    case Success(data: final movies):
-      print('¡Éxito! Se cargaron ${movies.length} películas populares:');
-      for (final movie in movies) {
-        print('  - ${movie.title} (Puntuación: ${movie.voteAverage})');
-      }
-      
-    case FailureResult(failure: final failure):
-      print('Ocurrió un error al consultar la API:');
-      print('  - Mensaje amigable: ${failure.userMessage}');
-  }
+## Configuración
 
-  // 4. Realizar una búsqueda con filtros avanzados
-  final filter = MovieSearchFilter(
-    includeAdult: false,
-    primaryReleaseYear: 2024,
-    language: 'es-ES',
-  );
+1. Copia el archivo de variables de entorno de ejemplo:
 
-  final Result<List<Movie>> searchResult = await repository.searchMovies(
-    'Spider-Man',
-    page: 1,
-    filter: filter,
-  );
+   ```bash
+   cp .env.example .env
+   ```
 
-  if (searchResult is Success<List<Movie>>) {
-    final searchMovies = searchResult.data;
-    print('\nBúsqueda filtrada de Spider-Man (2024):');
-    for (final movie in searchMovies) {
-      print('  - ${movie.title} (${movie.releaseDate})');
-    }
-  }
-}
+2. Edita `.env` y coloca tu clave:
+
+   ```env
+   API_KEY=tu_api_key_de_tmdb
+   ```
+
+3. Descarga las dependencias:
+
+   ```bash
+   flutter pub get
+   ```
+
+## Ejecución
+
+```bash
+flutter run
 ```
 
-## Flexibilidad de Cliente (Desacoplamiento)
+> La API key se carga en tiempo de ejecución desde `.env` mediante
+> [`flutter_dotenv`](https://pub.dev/packages/flutter_dotenv).
 
-Si en el futuro deseas cambiar el cliente HTTP por defecto (`Dio`) por otra librería como el paquete nativo `http`, solo necesitas implementar la interfaz `HttpService` y pasarla al constructor `RemoteMovieRepositoryImpl`:
+## Cómo se consume el paquete
+
+El ejemplo usa Riverpod para inyectar el repositorio del paquete y exponerlo a la UI:
 
 ```dart
-// 1. Implementa la interfaz del paquete
-class MyCustomHttpClient implements HttpService {
-  @override
-  Future<T> request<T>(
-    String path, {
-    required HttpMethod method,
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Map<String, dynamic>? headers,
-  }) async {
-    // Tu lógica personalizada usando http.Client u otra librería
-  }
-}
+// movie_repository_provider.dart
+final movieRepositoryProvider = Provider<MovieRepository>((ref) {
+  return MovieRepository.create(apiKey: Env.apiKey);
+});
 
-// 2. Inyéctalo manualmente en el repositorio
-final customClient = MyCustomHttpClient();
-final resolver = ImageUrlResolver(
-  imageBaseUrl: 'https://image.tmdb.org/t/p/w500',
-  actorImageBaseUrl: 'https://image.tmdb.org/t/p/w185',
-  noImageUrl: 'https://sd.keepcalms.com/i-w600/keep-calm-poster-not-found.jpg',
-);
-
-final repository = RemoteMovieRepositoryImpl(customClient, resolver);
+// popular_movies_provider.dart
+final popularMoviesProvider = FutureProvider<List<Movie>>((ref) async {
+  final repository = ref.watch(movieRepositoryProvider);
+  final result = await repository.getPopular();
+  return switch (result) {
+    Success(data: final movies) => movies,
+    FailureResult(failure: final failure) => throw failure,
+  };
+});
 ```
+
+Los tipos `Movie`, `Actor`, `Result` y `Failure` que usan los widgets provienen
+directamente de `package:remote_tmdb_kit/remote_tmdb_kit.dart`.
+
+## Estructura
+
+```
+lib/
+├── core/
+│   ├── constants/        # rutas y carga de la API key (Env)
+│   └── theme/            # tema claro/oscuro
+└── features/movies/presentation/
+    ├── delegates/        # búsqueda (SearchDelegate)
+    ├── pages/            # HomePage, MovieDetailPage
+    ├── providers/        # providers de Riverpod que consumen el paquete
+    └── widgets/          # tarjetas, carrusel, listas, etc.
+```
+
+> No hay carpeta `infrastructure/` ni `domain/`: esa lógica fue extraída al paquete
+> `remote_tmdb_kit`.

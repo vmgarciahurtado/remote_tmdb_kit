@@ -1,78 +1,86 @@
 # remote_tmdb_kit
 
-Un paquete de Dart/Flutter altamente cohesivo, desacoplado y listo para **pub.dev** que encapsula la integración con la API de películas de The Movie Database (TMDB).
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Dart](https://img.shields.io/badge/Dart-3.12%2B-0175C2.svg)](https://dart.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-%3E%3D1.17-02569B.svg)](https://flutter.dev)
+[![Tests](https://img.shields.io/badge/tests-44%20passing-success.svg)](test)
 
-Este paquete está diseñado bajo principios de arquitectura limpia, aislando por completo al cliente de detalles HTTP (como cabeceras y códigos de estado) y exponiendo un control de flujo funcional basado en el patrón `Result`.
+Idioma: Español
 
----
+Un paquete Dart/Flutter altamente cohesivo, desacoplado y listo para producción que
+encapsula la integración con la API de películas de **The Movie Database (TMDB)**.
 
-## Características
+Está diseñado bajo principios de arquitectura limpia: aísla por completo al cliente de
+los detalles HTTP (cabeceras, códigos de estado, deserialización) y expone un control de
+flujo funcional basado en el patrón `Result`.
 
-* **Aislamiento de Errores**: Mapea automáticamente excepciones de red crudas y códigos de respuesta HTTP a fallos tipados (`ConnectionFailure`, `ServerFailure`, etc.) con mensajes en español amigables para el usuario.
-* **Flujo Funcional con Result**: Retorna `Success<T>` o `FailureResult<T>` en cada petición para simplificar y dar seguridad al control de estados en tu interfaz.
-* **Filtros de Búsqueda Avanzados**: Incorpora un modelo inmutable `MovieSearchFilter` para refinar tus búsquedas de películas.
-* **Logger HTTP Opcional**: Registro detallado de peticiones, respuestas y errores en consola desactivado por defecto (`enableLogging = false`).
-* **Documentación en Hover**: Todo el API público está completamente documentado con Dartdoc e incluye ejemplos de código visibles directamente desde tu editor (IDE).
-* **Cliente HTTP Desacoplable**: Viene configurado por defecto con `Dio`, pero la interfaz `HttpService` está abierta para que inyectes cualquier cliente HTTP de tu preferencia (ej. el paquete nativo `http`).
-* **Resolución Automática de Imágenes**: Inyecta dinámicamente un `ImageUrlResolver` para convertir paths parciales de TMDB en URLs absolutas, incluyendo fallback para imágenes no encontradas.
-* **100% Libre de Riverpod o Gestores de Estado**: Puedes consumirlo con Riverpod (ver sección de ejemplos), BLoC, Provider o setState puro.
-* **Sin Dependencias de Mocking en Tests**: Cobertura de pruebas unitarias robusta construida con Fakes escritos a mano, asegurando rapidez y robustez.
+> El cliente HTTP por defecto es [`dio`](https://pub.dev/packages/dio), pero la interfaz
+> `HttpService` está abierta para inyectar cualquier otro cliente (por ejemplo `http`).
 
----
+<details>
+  <summary>Tabla de contenido</summary>
 
-## Estructura de Archivos del Paquete
-
-La estructura interna (`lib/src/`) está dividida de forma modular:
-
-* **`errors/`**: Jerarquía de excepciones de negocio (`failures.dart`).
-* **`result/`**: Mónada `Result` (`result.dart`).
-* **`network/`**: Abstracciones generales de red (`http_method.dart`, `http_service.dart`) e implementación específica con Dio en su subcarpeta (`dio/dio_http_service.dart`, `dio/logging_interceptor.dart`).
-* **`models/`**: Entidades del dominio de películas y filtros (`movie.dart`, `actor.dart`, `movie_search_filter.dart`).
-* **`dtos/`**: Modelos de mapeo JSON de TMDB internos (`remote_movie_model.dart`, etc. - ocultos al exterior).
-* **`mappers/`**: Conversores estáticos de DTO a Entidad (`remote_movie_mapper.dart`, etc.).
-* **`services/`**: Formateador y resolutor de URLs de imágenes de cartelera (`image_url_resolver.dart`).
-* **`helpers/`**: Utilitarios y helpers de uso interno (`repository_helper.dart`).
-* **`repositories/`**: Interfaz de repositorio e implementación concreta (`movie_repository.dart`, `remote_movie_repository_impl.dart`).
-
----
+<!-- TOC -->
+* [remote_tmdb_kit](#remote_tmdb_kit)
+  * [Empezando](#empezando)
+    * [Instalación](#instalación)
+    * [Uso simple](#uso-simple)
+  * [Ejemplos](#ejemplos)
+    * [Películas populares](#películas-populares)
+    * [Películas en cartelera](#películas-en-cartelera)
+    * [Búsqueda con filtros avanzados](#búsqueda-con-filtros-avanzados)
+    * [Reparto de una película](#reparto-de-una-película)
+  * [API del repositorio](#api-del-repositorio)
+  * [Manejo de errores](#manejo-de-errores)
+  * [Cambiar el cliente HTTP](#cambiar-el-cliente-http)
+  * [Características](#características)
+  * [Estructura del paquete](#estructura-del-paquete)
+  * [Pruebas](#pruebas)
+  * [Versionamiento (SemVer)](#versionamiento-semver)
+  * [Licencia](#licencia)
+<!-- TOC -->
+</details>
 
 ## Empezando
 
-Agrega la dependencia en el archivo `pubspec.yaml` de tu aplicación de Flutter:
+### Instalación
+
+Agrega la dependencia en el `pubspec.yaml` de tu aplicación:
 
 ```yaml
 dependencies:
   remote_tmdb_kit:
-    path: ../remote_tmdb_kit # O la versión publicada en pub.dev
+    git:
+      url: https://github.com/vmgarciahurtado/remote_tmdb_kit.git
+    # O usando una ruta local:
+    # path: ../remote_tmdb_kit
 ```
 
-Ejecuta el comando para descargar dependencias:
+Luego descarga las dependencias:
 
 ```bash
 flutter pub get
 ```
 
----
+### Uso simple
 
-## Instrucciones de Uso
-
-### 1. Inicialización Básica (Dio por defecto)
-
-Usa el constructor `MovieRepository.create` y suministra tu `apiKey` de TMDB. El parámetro `enableLogging` controla el registro en consola y está en **`false` por defecto**:
+Crea el repositorio con `MovieRepository.create` suministrando tu `apiKey` de TMDB:
 
 ```dart
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 
 final repository = MovieRepository.create(
   apiKey: 'TU_API_KEY_DE_TMDB',
-  enableLogging: false, // Por defecto es false
-  language: 'es-ES', // Idioma de los datos devueltos
+  language: 'es-ES',        // Idioma de los datos devueltos (por defecto)
+  enableLogging: false,     // Logs en consola (por defecto false)
 );
+
+final result = await repository.getPopular(page: 1);
 ```
 
-### 2. Consultar Información
+## Ejemplos
 
-Puedes consultar películas populares, en cartelera, realizar búsquedas u obtener los actores de una película. Maneja el resultado con seguridad mediante patrones funcionales:
+### Películas populares
 
 ```dart
 void fetchPopularMovies() async {
@@ -80,24 +88,28 @@ void fetchPopularMovies() async {
 
   switch (result) {
     case Success(data: final movies):
-      print('Películas populares cargadas exitosamente:');
       for (final movie in movies) {
         print('- ${movie.title} (${movie.releaseDate})');
       }
-      
     case FailureResult(failure: final failure):
-      // El mensaje ya viene traducido y listo para pintar en pantalla
-      print('Error al cargar datos: ${failure.userMessage}');
+      // El mensaje ya viene traducido y listo para pintar en pantalla.
+      print('Error: ${failure.userMessage}');
   }
 }
 ```
 
-### 3. Búsqueda con Filtros Avanzados
-
-Usa `MovieSearchFilter` para acotar tus búsquedas en la base de datos de películas de TMDB:
+### Películas en cartelera
 
 ```dart
-void searchActionMovies() async {
+final Result<List<Movie>> result = await repository.getNowPlaying(page: 1);
+```
+
+### Búsqueda con filtros avanzados
+
+Usa `MovieSearchFilter` para acotar la búsqueda:
+
+```dart
+void searchMovies() async {
   final filter = MovieSearchFilter(
     includeAdult: false,
     primaryReleaseYear: 2024,
@@ -117,19 +129,75 @@ void searchActionMovies() async {
 }
 ```
 
----
+### Reparto de una película
 
-## Cómo Cambiar de Cliente HTTP (Desacoplamiento)
+```dart
+final Result<List<Actor>> result = await repository.getMovieCast(550); // Fight Club
 
-Si prefieres usar la librería nativa `http` de Dart en lugar de `Dio`, puedes hacerlo sin tocar el código interno del paquete. 
+if (result is Success<List<Actor>>) {
+  for (final actor in result.data) {
+    print('${actor.name} como ${actor.character}');
+  }
+}
+```
 
-Solo debes implementar la interfaz `HttpService` e inyectarla en `RemoteMovieRepositoryImpl`:
+## API del repositorio
+
+`MovieRepository` expone cuatro métodos. Todos retornan un `Result`:
+
+```dart
+Future<Result<List<Movie>>> getNowPlaying({int page = 1});
+Future<Result<List<Movie>>> getPopular({int page = 1});
+Future<Result<List<Movie>>> searchMovies(String query, {int page = 1, MovieSearchFilter? filter});
+Future<Result<List<Actor>>> getMovieCast(int movieId);
+```
+
+El constructor de factoría `MovieRepository.create` acepta:
+
+| Parámetro            | Tipo     | Por defecto                              | Descripción                                  |
+|----------------------|----------|------------------------------------------|----------------------------------------------|
+| `apiKey`             | `String` | — (requerido)                            | Clave de acceso a la API de TMDB.            |
+| `enableLogging`      | `bool`   | `false`                                  | Activa los logs HTTP en consola.             |
+| `baseUrl`            | `String` | `https://api.themoviedb.org/3/`          | URL base de la API.                          |
+| `imageBaseUrl`       | `String` | `https://image.tmdb.org/t/p/w500`        | URL base para imágenes de películas.         |
+| `actorImageBaseUrl`  | `String` | `https://image.tmdb.org/t/p/w185`        | URL base para fotos de actores.              |
+| `noImageUrl`         | `String` | URL de fallback                          | Imagen usada cuando no hay póster.           |
+| `language`           | `String` | `es-ES`                                  | Idioma de los datos devueltos.               |
+
+## Manejo de errores
+
+`Result<T>` es una clase sellada (`sealed`) con dos variantes: `Success<T>` y
+`FailureResult<T>`. Esto obliga a manejar ambos casos en tiempo de compilación.
+
+```dart
+switch (result) {
+  case Success(data: final value):
+    // usar value
+  case FailureResult(failure: final error):
+    print(error.userMessage);
+}
+```
+
+¿Prefieres propagar el error con `try/catch`? Usa la extensión `getOrThrow`:
+
+```dart
+try {
+  final movies = result.getOrThrow(); // retorna la lista o lanza el Failure
+} on Failure catch (e) {
+  print(e.userMessage);
+}
+```
+
+## Cambiar el cliente HTTP
+
+Si prefieres el paquete nativo `http` (u otro cliente), implementa la interfaz
+`HttpService` e inyéctala en `RemoteMovieRepositoryImpl`, sin tocar el código del paquete:
 
 ```dart
 import 'package:http/http.dart' as http;
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 
-// 1. Implementa la interfaz con la librería que desees
+// 1. Implementa la interfaz con la librería que desees.
 class HttpPackageClient implements HttpService {
   final http.Client client = http.Client();
 
@@ -141,69 +209,79 @@ class HttpPackageClient implements HttpService {
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
   }) async {
-    // ... Implementa la lógica de conversión HTTP y mapeo a fallos
+    // ... conversión HTTP y mapeo de errores a Failure
   }
 }
 
-// 2. Inyéctalo manualmente al instanciar el repositorio
-final myClient = HttpPackageClient();
+// 2. Inyéctalo manualmente al instanciar el repositorio.
 final resolver = ImageUrlResolver(
   imageBaseUrl: 'https://image.tmdb.org/t/p/w500',
   actorImageBaseUrl: 'https://image.tmdb.org/t/p/w185',
   noImageUrl: 'https://sd.keepcalms.com/i-w600/keep-calm-poster-not-found.jpg',
 );
 
-final repository = RemoteMovieRepositoryImpl(myClient, resolver);
+final repository = RemoteMovieRepositoryImpl(HttpPackageClient(), resolver);
 ```
 
----
+## Características
 
-## Integración con Riverpod 3 (Recomendado en Aplicaciones)
+* **Aislamiento de errores**: mapea automáticamente excepciones de red y códigos HTTP
+  crudos a fallos tipados (`ConnectionFailure`, `ServerFailure`, `NotFoundFailure`,
+  `UnauthorizedFailure`, `UnexpectedFailure`) con mensajes en español listos para mostrar.
+* **Flujo funcional con `Result`**: cada petición retorna `Success<T>` o `FailureResult<T>`,
+  dando seguridad de tipos al manejar estados en la UI.
+* **Filtros de búsqueda avanzados**: modelo inmutable `MovieSearchFilter` para refinar
+  búsquedas (idioma, año, región, contenido para adultos).
+* **Logger HTTP opcional**: registro detallado de peticiones, respuestas y errores en
+  consola, desactivado por defecto (`enableLogging = false`).
+* **Documentación en hover**: toda la API pública está documentada con Dartdoc e incluye
+  ejemplos visibles desde el editor.
+* **Cliente HTTP desacoplable**: viene con `dio` por defecto, pero `HttpService` permite
+  inyectar cualquier cliente.
+* **Resolución automática de imágenes**: `ImageUrlResolver` convierte rutas parciales de
+  TMDB en URLs absolutas, con fallback para imágenes no disponibles.
+* **Sin acoplamiento a gestores de estado**: úsalo con Riverpod, BLoC, Provider o
+  `setState` puro.
+* **Sin dependencias de mocking en tests**: cobertura construida con *fakes* escritos a mano.
 
-En tu aplicación cliente, puedes inyectar el repositorio de forma limpia utilizando Riverpod:
+## Estructura del paquete
 
-```dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
+La estructura interna (`lib/src/`) está dividida de forma modular por responsabilidad:
 
-// Proveedor de la API Key
-final tmdbApiKeyProvider = Provider<String>((ref) {
-  return const String.fromEnvironment('TMDB_API_KEY');
-});
+| Carpeta          | Responsabilidad                                                       |
+|------------------|-----------------------------------------------------------------------|
+| `errors/`        | Jerarquía de fallas de negocio (`failures.dart`).                     |
+| `result/`        | Tipo `Result` (`Success` / `FailureResult`).                          |
+| `network/`       | Abstracciones de red (`HttpService`, `HttpMethod`) + impl. con `dio`. |
+| `models/`        | Entidades de dominio (`Movie`, `Actor`, `MovieSearchFilter`).         |
+| `dtos/`          | Modelos de deserialización JSON de TMDB (internos).                   |
+| `mappers/`       | Conversores de DTO a entidad.                                         |
+| `services/`      | Resolución de URLs de imágenes (`ImageUrlResolver`).                  |
+| `helpers/`       | Utilidades internas (`executeRepositoryCall`).                        |
+| `repositories/`  | Interfaz `MovieRepository` e implementación concreta.                 |
 
-// Proveedor del Repositorio
-final movieRepositoryProvider = Provider<MovieRepository>((ref) {
-  final apiKey = ref.watch(tmdbApiKeyProvider);
-  return MovieRepository.create(
-    apiKey: apiKey,
-    enableLogging: false,
-  );
-});
+## Pruebas
 
-// Proveedor para obtener películas en cartelera
-final nowPlayingMoviesProvider = FutureProvider<List<Movie>>((ref) async {
-  final repository = ref.watch(movieRepositoryProvider);
-  final result = await repository.getNowPlaying(page: 1);
-  return result.getOrThrow(); // Retorna la lista o lanza el Failure correspondiente
-});
-```
-
----
-
-## Pruebas de Unidad
-
-Puedes correr la suite de pruebas unitarias del paquete desde la raíz:
+El paquete incluye una suite de pruebas unitarias construida con *fakes* (sin `mockito`
+ni `mocktail`):
 
 ```bash
 flutter test
 ```
 
----
+## Versionamiento (SemVer)
 
-## Versionamiento Semántico (SemVer)
+Este paquete sigue [Semantic Versioning](https://semver.org/):
 
-Este paquete sigue la convención estricta de [Semantic Versioning (SemVer)](https://semver.org/):
+* **Parche (`x.y.Z`)**: correcciones internas que no afectan la API pública
+  (bugfixes, optimizaciones, documentación).
+* **Menor (`x.Y.z`)**: nuevas funcionalidades retrocompatibles
+  (un nuevo parámetro opcional o un nuevo método del repositorio).
+* **Mayor (`X.y.z`)**: cambios que rompen compatibilidad
+  (renombrar propiedades de `Movie` o cambiar firmas de retorno).
 
-* **Versiones de Parche (`1.0.x`)**: Cambios internos que no afectan la API pública (ej. corrección de bugs menores en el formateo de URLs, optimizaciones de código, documentación).
-* **Versiones Menores (`1.x.0`)**: Nuevas características hacia atrás compatibles (ej. agregar un nuevo parámetro opcional o exponer un nuevo método del repositorio como películas similares).
-* **Versiones Mayores (`x.0.0`)**: Cambios de diseño que rompen la compatibilidad con código anterior (ej. cambiar los nombres de las propiedades de las entidades `Movie` o cambiar la firma de retorno de los métodos).
+Consulta el historial completo de cambios en [CHANGELOG.md](CHANGELOG.md).
+
+## Licencia
+
+Distribuido bajo la licencia MIT. Consulta [LICENSE](LICENSE) para más detalles.

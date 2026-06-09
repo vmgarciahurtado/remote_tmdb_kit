@@ -1,0 +1,31 @@
+name: remote_content_explorer
+description: "App de ejemplo que consume el paquete remote_tmdb_kit para explorar películas de TMDB."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_dotenv: ^6.0.1
+  flutter_riverpod: ^3.3.1
+  remote_tmdb_kit:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins.ttf
+
+  assets:
+    - .env
+    - assets/icons/
+    - assets/images/
