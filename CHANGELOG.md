@@ -1,3 +1,3 @@
 ## 1.0.0
 
-- Initial version of Sintia Design System.
+- Initial version of remote_tmdb_kit.
