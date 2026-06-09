@@ -49,11 +49,13 @@ Agrega la dependencia en el `pubspec.yaml` de tu aplicación:
 
 ```yaml
 dependencies:
-  remote_tmdb_kit:
-    git:
-      url: https://github.com/vmgarciahurtado/remote_tmdb_kit.git
-    # O usando una ruta local:
-    # path: ../remote_tmdb_kit
+  remote_tmdb_kit: ^1.0.1
+```
+
+O instálala desde la terminal:
+
+```bash
+flutter pub add remote_tmdb_kit
 ```
 
 Luego descarga las dependencias:

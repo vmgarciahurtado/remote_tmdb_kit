@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:remote_content_explorer/core/config/tmdb_providers.dart';
+import 'package:remote_content_explorer/core/constants/env.dart';
 import 'package:remote_content_explorer/core/constants/routes.dart';
 import 'package:remote_content_explorer/core/theme/theme.dart';
+import 'package:riverpod/src/framework.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  runApp(const ProviderScope(child: MainApp()));
+  runApp(
+    ProviderScope(
+      overrides: <Override>[
+        tmdbApiKeyProvider.overrideWithValue(Env.apiKey),
+      ],
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -16,7 +27,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Remote content explorer',
+      title: 'Example',
       initialRoute: AppRoutes.initialRoute,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
