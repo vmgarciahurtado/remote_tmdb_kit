@@ -33,6 +33,7 @@ flujo funcional basado en el patrón `Result`.
   * [API del repositorio](#api-del-repositorio)
   * [Manejo de errores](#manejo-de-errores)
   * [Cambiar el cliente HTTP](#cambiar-el-cliente-http)
+  * [¿Tienes otra fuente de datos?](#tienes-otra-fuente-de-datos)
   * [Características](#características)
   * [Estructura del paquete](#estructura-del-paquete)
   * [Pruebas](#pruebas)
@@ -49,7 +50,7 @@ Agrega la dependencia en el `pubspec.yaml` de tu aplicación:
 
 ```yaml
 dependencies:
-  remote_tmdb_kit: ^1.0.1
+  remote_tmdb_kit: ^2.0.0
 ```
 
 O instálala desde la terminal:
@@ -66,15 +67,18 @@ flutter pub get
 
 ### Uso simple
 
-Crea el repositorio con `MovieRepository.create` suministrando tu `apiKey` de TMDB:
+Crea el repositorio con `MovieRepository.create`, pasando un objeto
+`TmdbConfig` con tu `apiKey` de TMDB:
 
 ```dart
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 
 final repository = MovieRepository.create(
-  apiKey: 'TU_API_KEY_DE_TMDB',
-  language: 'es-ES',        // Idioma de los datos devueltos (por defecto)
-  enableLogging: false,     // Logs en consola (por defecto false)
+  const TmdbConfig(
+    apiKey: 'TU_API_KEY_DE_TMDB',
+    language: 'es-ES',     // Idioma de los datos devueltos (por defecto)
+    enableLogging: false,  // Logs en consola (por defecto false)
+  ),
 );
 
 final result = await repository.getPopular(page: 1);
@@ -154,7 +158,8 @@ Future<Result<List<Movie>>> searchMovies(String query, {int page = 1, MovieSearc
 Future<Result<List<Actor>>> getMovieCast(int movieId);
 ```
 
-El constructor de factoría `MovieRepository.create` acepta:
+El constructor de factoría `MovieRepository.create` recibe un objeto
+`TmdbConfig` con los siguientes campos:
 
 | Parámetro            | Tipo     | Por defecto                              | Descripción                                  |
 |----------------------|----------|------------------------------------------|----------------------------------------------|
@@ -224,6 +229,50 @@ final resolver = ImageUrlResolver(
 
 final repository = RemoteMovieRepositoryImpl(HttpPackageClient(), resolver);
 ```
+
+## ¿Tienes otra fuente de datos?
+
+`MovieRepository` es una **interfaz abstracta**, y `MovieRepository.create`
+(que consume TMDB) es solo la implementación por defecto. Si tu fuente de datos
+no es TMDB —una base de datos local, una caché, un archivo JSON u otro
+backend—, puedes implementar tú mismo el contrato sin tocar el código del
+paquete:
+
+```dart
+import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
+
+/// Fuente de datos propia: aquí decides de dónde sale la información.
+class MyCustomMovieRepository implements MovieRepository {
+  @override
+  Future<Result<List<Movie>>> getNowPlaying({int page = 1}) async {
+    // Consulta tu fuente (BD, caché, JSON...) y devuelve un Result.
+    return const Success(<Movie>[]);
+  }
+
+  @override
+  Future<Result<List<Movie>>> getPopular({int page = 1}) async {
+    return const Success(<Movie>[]);
+  }
+
+  @override
+  Future<Result<List<Movie>>> searchMovies(
+    String query, {
+    int page = 1,
+    MovieSearchFilter? filter,
+  }) async {
+    return const Success(<Movie>[]);
+  }
+
+  @override
+  Future<Result<List<Actor>>> getMovieCast(int movieId) async {
+    return const Success(<Actor>[]);
+  }
+}
+```
+
+Como tu app depende de la abstracción `MovieRepository` y no de la
+implementación concreta, puedes intercambiar la fuente de datos sin cambiar el
+resto del código (inversión de dependencias).
 
 ## Características
 

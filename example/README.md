@@ -16,7 +16,8 @@ interfaz de usuario y el cableado de dependencias.
 
 Todo el acceso a datos pasa por un único punto:
 [`movie_repository_provider.dart`](lib/features/movies/presentation/providers/movie_repository_provider.dart),
-que crea el repositorio del paquete con `MovieRepository.create(apiKey: Env.apiKey)`.
+que crea el repositorio del paquete con
+`MovieRepository.create(TmdbConfig(apiKey: Env.apiKey))`.
 
 ## Requisitos
 
@@ -60,7 +61,7 @@ El ejemplo usa Riverpod para inyectar el repositorio del paquete y exponerlo a l
 ```dart
 // movie_repository_provider.dart
 final movieRepositoryProvider = Provider<MovieRepository>((ref) {
-  return MovieRepository.create(apiKey: Env.apiKey);
+  return MovieRepository.create(TmdbConfig(apiKey: Env.apiKey));
 });
 
 // popular_movies_provider.dart
@@ -76,6 +77,14 @@ final popularMoviesProvider = FutureProvider<List<Movie>>((ref) async {
 
 Los tipos `Movie`, `Actor`, `Result` y `Failure` que usan los widgets provienen
 directamente de `package:remote_tmdb_kit/remote_tmdb_kit.dart`.
+
+### ¿Y si no quieres usar TMDB?
+
+`MovieRepository` es una interfaz: este ejemplo usa la implementación de TMDB
+(`MovieRepository.create`), pero podrías inyectar tu propia clase que implemente
+`MovieRepository` (BD local, caché, JSON...) cambiando solo este provider; el
+resto de la app no se entera. Mira el apartado «¿Tienes otra fuente de datos?»
+del README del paquete.
 
 ## Estructura
 

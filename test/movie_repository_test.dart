@@ -164,15 +164,16 @@ void main() {
     test(
       'creates a MovieRepository instance with default logging to false',
       () {
-        final repo = MovieRepository.create(apiKey: 'test_key');
+        final MovieRepository repo = MovieRepository.create(
+          const TmdbConfig(apiKey: 'test_key'),
+        );
         expect(repo, isA<MovieRepository>());
       },
     );
 
     test('creates a MovieRepository instance with logging enabled', () {
-      final repo = MovieRepository.create(
-        apiKey: 'test_key',
-        enableLogging: true,
+      final MovieRepository repo = MovieRepository.create(
+        const TmdbConfig(apiKey: 'test_key', enableLogging: true),
       );
       expect(repo, isA<MovieRepository>());
     });

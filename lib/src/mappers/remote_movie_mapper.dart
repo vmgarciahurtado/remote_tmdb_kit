@@ -2,8 +2,8 @@ import '../dtos/remote_movie_model.dart';
 import '../models/movie.dart';
 import '../services/image_url_resolver.dart';
 
-/// Mapeador encargado de transformar el DTO de película de red [RemoteMovieModel]
-/// a la entidad de dominio limpia e inmutable [Movie].
+/// Mapeador encargado de transformar el DTO de película de red
+/// [RemoteMovieModel] a la entidad de dominio limpia e inmutable [Movie].
 class RemoteMovieMapper {
   const RemoteMovieMapper._();
 

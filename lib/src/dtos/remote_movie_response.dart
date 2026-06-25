@@ -1,6 +1,7 @@
 import 'remote_movie_model.dart';
 
-/// DTO de respuesta paginada para listas de películas (ej. popular, cartelera, búsqueda).
+/// DTO de respuesta paginada para listas de películas
+/// (ej. popular, cartelera, búsqueda).
 class RemoteMovieResponse {
   const RemoteMovieResponse({
     required this.page,
@@ -12,7 +13,8 @@ class RemoteMovieResponse {
   factory RemoteMovieResponse.fromJson(Map<String, dynamic> json) =>
       RemoteMovieResponse(
         page: (json['page'] as num).toInt(),
-        results: (json['results'] as List<dynamic>?)
+        results:
+            (json['results'] as List<dynamic>?)
                 ?.map(
                   (dynamic e) =>
                       RemoteMovieModel.fromJson(e as Map<String, dynamic>),

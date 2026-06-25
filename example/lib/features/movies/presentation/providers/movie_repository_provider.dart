@@ -8,5 +8,7 @@ import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 /// dentro del paquete; aquí solo se inyecta la API key y se consume.
 final Provider<MovieRepository> movieRepositoryProvider =
     Provider<MovieRepository>((Ref ref) {
-      return MovieRepository.create(apiKey: ref.watch(tmdbApiKeyProvider));
+      return MovieRepository.create(
+        TmdbConfig(apiKey: ref.watch(tmdbApiKeyProvider)),
+      );
     });

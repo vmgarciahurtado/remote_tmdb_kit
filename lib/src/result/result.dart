@@ -36,11 +36,14 @@ class FailureResult<T> extends Result<T> {
   const FailureResult(this.failure);
 }
 
-/// Extensión útil para extraer valores o propagar fallas en los resultados de operaciones.
+/// Extensión útil para extraer valores o propagar fallas en los
+/// resultados de operaciones.
 extension ResultX<T> on Result<T> {
-  /// Retorna el valor contenido si es un [Success], o lanza el [Failure] correspondiente si es un [FailureResult].
+  /// Retorna el valor contenido si es un [Success], o lanza el [Failure]
+  /// correspondiente si es un [FailureResult].
   ///
-  /// Útil para propagar errores sin repetir bloques de coincidencia de patrones (pattern matching).
+  /// Útil para propagar errores sin repetir bloques de coincidencia de
+  /// patrones (pattern matching).
   ///
   /// ### Ejemplo de uso:
   /// ```dart

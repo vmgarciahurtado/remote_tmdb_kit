@@ -1,6 +1,6 @@
 name: remote_tmdb_kit
 description: "Cliente desacoplado para la API de TMDB con manejo de errores tipado, patrón Result y cliente HTTP intercambiable."
-version: 1.0.1
+version: 2.0.0
 homepage: https://github.com/vmgarciahurtado/remote_tmdb_kit
 repository: https://github.com/vmgarciahurtado/remote_tmdb_kit
 
@@ -19,5 +19,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  uses-material-design: true
 
 

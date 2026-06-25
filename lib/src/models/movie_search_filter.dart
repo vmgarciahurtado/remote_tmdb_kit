@@ -1,4 +1,5 @@
-/// Representa un conjunto de criterios de filtrado avanzados para buscar películas.
+/// Representa un conjunto de criterios de filtrado avanzados para buscar
+/// películas.
 ///
 /// Permite acotar las búsquedas utilizando parámetros específicos soportados
 /// por el endpoint `search/movie` de la API de TMDB.
@@ -26,26 +27,32 @@ class MovieSearchFilter {
   /// Si es `true`, la búsqueda incluirá películas clasificadas para adultos.
   final bool? includeAdult;
 
-  /// Código de idioma específico para anular el configurado por defecto (ej. 'en-US').
+  /// Código de idioma específico para anular el configurado por defecto
+  /// (ej. 'en-US').
   final String? language;
 
-  /// Filtra los resultados para mostrar películas cuyo año de lanzamiento principal coincide.
+  /// Filtra los resultados para mostrar películas cuyo año de lanzamiento
+  /// principal coincide.
   final int? primaryReleaseYear;
 
-  /// Código de país ISO 3166-1 para especificar una región de búsqueda (ej. 'US', 'ES').
+  /// Código de país ISO 3166-1 para especificar una región de búsqueda
+  /// (ej. 'US', 'ES').
   final String? region;
 
-  /// Filtra los resultados para mostrar películas cuyo año de lanzamiento coincide.
+  /// Filtra los resultados para mostrar películas cuyo año de lanzamiento
+  /// coincide.
   final int? year;
 
-  /// Convierte los filtros configurados en un mapa de parámetros de consulta (`queryParameters`).
+  /// Convierte los filtros configurados en un mapa de parámetros de
+  /// consulta (`queryParameters`).
   ///
   /// Solo se incluyen en el mapa los campos que no sean nulos.
   Map<String, dynamic> toQueryParameters() {
     return <String, dynamic>{
       if (includeAdult != null) 'include_adult': includeAdult,
       if (language != null) 'language': language,
-      if (primaryReleaseYear != null) 'primary_release_year': primaryReleaseYear,
+      if (primaryReleaseYear != null)
+        'primary_release_year': primaryReleaseYear,
       if (region != null) 'region': region,
       if (year != null) 'year': year,
     };

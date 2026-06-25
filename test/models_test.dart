@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
-import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_actor_model.dart';
-import 'package:remote_tmdb_kit/src/dtos/remote_movie_response.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_cast_response.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_movie_response.dart';
 
 void main() {
   group('RemoteMovieModel.fromJson', () {
@@ -126,11 +126,11 @@ void main() {
 
   group('MovieSearchFilter', () {
     test('toQueryParameters returns only non-null values', () {
-      const filter = MovieSearchFilter(
+      const MovieSearchFilter filter = MovieSearchFilter(
         includeAdult: false,
         primaryReleaseYear: 2024,
       );
-      final queryParams = filter.toQueryParameters();
+      final Map<String, dynamic> queryParams = filter.toQueryParameters();
       expect(queryParams, <String, dynamic>{
         'include_adult': false,
         'primary_release_year': 2024,
@@ -139,8 +139,10 @@ void main() {
     });
 
     test('copyWith copies parameters correctly', () {
-      const filter = MovieSearchFilter(includeAdult: false);
-      final updated = filter.copyWith(primaryReleaseYear: 2024);
+      const MovieSearchFilter filter = MovieSearchFilter(includeAdult: false);
+      final MovieSearchFilter updated = filter.copyWith(
+        primaryReleaseYear: 2024,
+      );
       expect(updated.includeAdult, isFalse);
       expect(updated.primaryReleaseYear, 2024);
     });

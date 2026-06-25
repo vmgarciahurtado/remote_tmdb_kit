@@ -1,4 +1,5 @@
-/// DTO de deserialización para películas individuales desde la respuesta JSON de TMDB.
+/// DTO de deserialización para películas individuales desde la respuesta
+/// JSON de TMDB.
 class RemoteMovieModel {
   const RemoteMovieModel({
     required this.id,

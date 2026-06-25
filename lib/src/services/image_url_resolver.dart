@@ -1,4 +1,5 @@
-/// Servicio encargado de resolver y construir las URLs absolutas de las imágenes de TMDB.
+/// Servicio encargado de resolver y construir las URLs absolutas de las
+/// imágenes de TMDB.
 ///
 /// Como TMDB retorna rutas relativas en sus respuestas de JSON, esta clase
 /// se encarga de concatenarlas con el URL base configurado, o de proveer
@@ -17,12 +18,14 @@ class ImageUrlResolver {
   /// URL base para obtener fotos de perfil de actores.
   final String actorImageBaseUrl;
 
-  /// URL de fallback que se retornará cuando una película no disponga de póster o fondo.
+  /// URL de fallback que se retornará cuando una película no disponga de
+  /// póster o fondo.
   final String noImageUrl;
 
   /// Resuelve la URL completa para un póster o fondo de película.
   ///
-  /// Si el parámetro [path] está vacío o no es válido, retorna la URL [noImageUrl].
+  /// Si el parámetro [path] está vacío o no es válido, retorna la URL
+  /// [noImageUrl].
   String movieImage(String path) =>
       path.isNotEmpty ? '$imageBaseUrl$path' : noImageUrl;
 

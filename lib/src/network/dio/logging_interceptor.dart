@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-/// Interceptor de `Dio` encargado de registrar logs detallados de red en consola.
+/// Interceptor de `Dio` encargado de registrar logs detallados de red en
+/// consola.
 ///
-/// Solo realiza impresiones en consola si la aplicación se ejecuta en modo de depuración (`kDebugMode`).
+/// Solo realiza impresiones en consola si la aplicación se ejecuta en
+/// modo de depuración (`kDebugMode`).
 class LoggingInterceptor extends Interceptor {
   /// Crea una instancia del interceptor de logs.
   LoggingInterceptor();

@@ -2,8 +2,9 @@ import 'http_method.dart';
 
 /// Interfaz abstracta para realizar solicitudes HTTP.
 ///
-/// Permite desacoplar la implementación del cliente de red (por ejemplo, `Dio` o `http`)
-/// del resto de la lógica de negocio y repositorios del paquete.
+/// Permite desacoplar la implementación del cliente de red (por ejemplo,
+/// `Dio` o `http`) del resto de la lógica de negocio y repositorios del
+/// paquete.
 abstract interface class HttpService {
   /// Realiza una solicitud HTTP asíncrona a la ruta especificada por [path].
   ///
