@@ -147,4 +147,32 @@ void main() {
       expect(updated.primaryReleaseYear, 2024);
     });
   });
+
+  group('MovieSearchFilterBuilder', () {
+    test('build returns a filter with all the configured criteria', () {
+      final MovieSearchFilter filter = MovieSearchFilterBuilder()
+          .year(2024)
+          .region('MX')
+          .includeAdult(false)
+          .build();
+
+      expect(filter.year, 2024);
+      expect(filter.region, 'MX');
+      expect(filter.includeAdult, isFalse);
+      expect(filter.language, isNull);
+      expect(filter.primaryReleaseYear, isNull);
+    });
+
+    test('build with no criteria returns an empty filter', () {
+      final MovieSearchFilter filter = MovieSearchFilterBuilder().build();
+
+      expect(filter.toQueryParameters(), isEmpty);
+    });
+
+    test('each setter returns the same builder to allow chaining', () {
+      final MovieSearchFilterBuilder builder = MovieSearchFilterBuilder();
+
+      expect(builder.language('en-US'), same(builder));
+    });
+  });
 }

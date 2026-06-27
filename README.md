@@ -135,6 +135,20 @@ void searchMovies() async {
 }
 ```
 
+También puedes construir el filtro de forma incremental con
+`MovieSearchFilterBuilder` (patrón Builder), útil cuando los criterios se arman
+paso a paso desde una interfaz:
+
+```dart
+final filter = MovieSearchFilterBuilder()
+    .includeAdult(false)
+    .primaryReleaseYear(2024)
+    .language('es-ES')
+    .build();
+
+final result = await repository.searchMovies('Batman', filter: filter);
+```
+
 ### Reparto de una película
 
 ```dart

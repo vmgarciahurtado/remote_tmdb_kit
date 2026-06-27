@@ -53,4 +53,30 @@ class TmdbConfig {
 
   /// URL de fallback que se retornará cuando no haya póster disponible.
   final String noImageUrl;
+
+  /// Crea una copia de esta configuración reemplazando solo los valores
+  /// indicados y conservando el resto.
+  ///
+  /// Útil para derivar variantes (por ejemplo, cambiar únicamente el idioma
+  /// o activar el logging) sin reescribir todos los campos, manteniendo el
+  /// objeto base inmutable.
+  TmdbConfig copyWith({
+    String? apiKey,
+    bool? enableLogging,
+    String? baseUrl,
+    String? language,
+    String? imageBaseUrl,
+    String? actorImageBaseUrl,
+    String? noImageUrl,
+  }) {
+    return TmdbConfig(
+      apiKey: apiKey ?? this.apiKey,
+      enableLogging: enableLogging ?? this.enableLogging,
+      baseUrl: baseUrl ?? this.baseUrl,
+      language: language ?? this.language,
+      imageBaseUrl: imageBaseUrl ?? this.imageBaseUrl,
+      actorImageBaseUrl: actorImageBaseUrl ?? this.actorImageBaseUrl,
+      noImageUrl: noImageUrl ?? this.noImageUrl,
+    );
+  }
 }

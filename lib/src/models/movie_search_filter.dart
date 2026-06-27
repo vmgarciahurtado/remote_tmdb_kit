@@ -75,3 +75,68 @@ class MovieSearchFilter {
     );
   }
 }
+
+/// Constructor fluido (patrón Builder) para crear instancias de
+/// [MovieSearchFilter] de forma incremental.
+///
+/// Es útil cuando los criterios de búsqueda se arman paso a paso —por
+/// ejemplo, desde los controles de una interfaz— agregando solo los filtros
+/// que se necesiten antes de llamar a [build]. Cada método retorna el propio
+/// builder para permitir el encadenamiento.
+///
+/// ### Ejemplo de uso:
+/// ```dart
+/// final filter = MovieSearchFilterBuilder()
+///     .year(2024)
+///     .region('MX')
+///     .includeAdult(false)
+///     .build();
+/// ```
+class MovieSearchFilterBuilder {
+  bool? _includeAdult;
+  String? _language;
+  int? _primaryReleaseYear;
+  String? _region;
+  int? _year;
+
+  /// Define si la búsqueda incluirá contenido para adultos.
+  MovieSearchFilterBuilder includeAdult(bool value) {
+    _includeAdult = value;
+    return this;
+  }
+
+  /// Define el código de idioma de la búsqueda (ej. 'en-US').
+  MovieSearchFilterBuilder language(String value) {
+    _language = value;
+    return this;
+  }
+
+  /// Define el año de lanzamiento principal por el que filtrar.
+  MovieSearchFilterBuilder primaryReleaseYear(int value) {
+    _primaryReleaseYear = value;
+    return this;
+  }
+
+  /// Define el código de región ISO 3166-1 (ej. 'US', 'ES').
+  MovieSearchFilterBuilder region(String value) {
+    _region = value;
+    return this;
+  }
+
+  /// Define el año de lanzamiento por el que filtrar.
+  MovieSearchFilterBuilder year(int value) {
+    _year = value;
+    return this;
+  }
+
+  /// Construye el [MovieSearchFilter] inmutable con los criterios definidos.
+  MovieSearchFilter build() {
+    return MovieSearchFilter(
+      includeAdult: _includeAdult,
+      language: _language,
+      primaryReleaseYear: _primaryReleaseYear,
+      region: _region,
+      year: _year,
+    );
+  }
+}
