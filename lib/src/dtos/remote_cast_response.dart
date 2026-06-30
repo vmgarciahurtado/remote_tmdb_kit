@@ -10,7 +10,8 @@ class RemoteCastResponse {
   factory RemoteCastResponse.fromJson(Map<String, dynamic> json) =>
       RemoteCastResponse(
         id: (json['id'] as num).toInt(),
-        cast: (json['cast'] as List<dynamic>?)
+        cast:
+            (json['cast'] as List<dynamic>?)
                 ?.map(
                   (dynamic e) =>
                       RemoteActorModel.fromJson(e as Map<String, dynamic>),

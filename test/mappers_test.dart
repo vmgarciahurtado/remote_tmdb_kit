@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
-import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_actor_model.dart';
-import 'package:remote_tmdb_kit/src/mappers/remote_movie_mapper.dart';
+import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
 import 'package:remote_tmdb_kit/src/mappers/remote_actor_mapper.dart';
+import 'package:remote_tmdb_kit/src/mappers/remote_movie_mapper.dart';
 
 void main() {
   group('RemoteMovieMapper.toEntity', () {

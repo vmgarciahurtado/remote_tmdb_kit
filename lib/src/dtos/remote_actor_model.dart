@@ -1,4 +1,5 @@
-/// DTO de deserialización para actores individuales desde la respuesta JSON de TMDB.
+/// DTO de deserialización para actores individuales desde la respuesta
+/// JSON de TMDB.
 class RemoteActorModel {
   const RemoteActorModel({
     required this.id,

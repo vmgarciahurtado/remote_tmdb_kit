@@ -5,8 +5,9 @@ import '../http_service.dart';
 
 /// Implementación concreta de [HttpService] usando el paquete `Dio`.
 ///
-/// Se encarga de mapear las excepciones propias de `DioException` a las fallas
-/// del dominio de nuestra librería (`ConnectionFailure`, `ServerFailure`, etc.).
+/// Se encarga de mapear las excepciones propias de `DioException` a las
+/// fallas del dominio de nuestra librería (`ConnectionFailure`,
+/// `ServerFailure`, etc.).
 class DioHttpService implements HttpService {
   final Dio _dio;
 
@@ -31,11 +32,11 @@ class DioHttpService implements HttpService {
           headers: headers,
         ),
       );
-      
+
       if (response.data == null) {
         throw const UnexpectedFailure('La respuesta del servidor está vacía.');
       }
-      
+
       return response.data!;
     } on DioException catch (e) {
       throw _mapDioExceptionToFailure(e);

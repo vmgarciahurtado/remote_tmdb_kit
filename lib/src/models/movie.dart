@@ -35,12 +35,14 @@ class Movie {
 
   /// URL completa de la imagen del póster de la película.
   ///
-  /// Si la película no tiene póster asignado, contendrá la URL de fallback configurada.
+  /// Si la película no tiene póster asignado, contendrá la URL de fallback
+  /// configurada.
   final String posterPath;
 
   /// URL completa de la imagen de fondo (backdrop) de la película.
   ///
-  /// Si la película no tiene fondo asignado, contendrá la URL de fallback configurada.
+  /// Si la película no tiene fondo asignado, contendrá la URL de fallback
+  /// configurada.
   final String backdropPath;
 
   /// Fecha de lanzamiento de la película (usualmente en formato `AAAA-MM-DD`).
@@ -49,10 +51,12 @@ class Movie {
   /// Puntuación de popularidad calculada por TMDB.
   final double popularity;
 
-  /// Promedio de calificaciones recibidas por la película (rango de 0.0 a 10.0).
+  /// Promedio de calificaciones recibidas por la película
+  /// (rango de 0.0 a 10.0).
   final double voteAverage;
 
-  /// Cantidad total de votos registrados para calcular el promedio de calificaciones.
+  /// Cantidad total de votos registrados para calcular el promedio de
+  /// calificaciones.
   final int voteCount;
 
   /// Lista de identificadores de géneros asociados a la película.

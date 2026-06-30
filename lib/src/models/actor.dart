@@ -1,4 +1,5 @@
-/// Modelo de dominio que representa a un actor o miembro del reparto de una película.
+/// Modelo de dominio que representa a un actor o miembro del reparto de
+/// una película.
 class Actor {
   /// Crea una instancia inmutable de [Actor].
   const Actor({

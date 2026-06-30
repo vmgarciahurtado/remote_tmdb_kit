@@ -1,4 +1,5 @@
-/// Representa un error o excepción que ocurre al interactuar con el cliente de TMDB.
+/// Representa un error o excepción que ocurre al interactuar con el
+/// cliente de TMDB.
 ///
 /// Todas las fallas del repositorio extienden de esta clase base.
 sealed class Failure implements Exception {
@@ -24,7 +25,8 @@ class ConnectionFailure extends Failure {
   String get userMessage => message;
 }
 
-/// Representa un error interno del servidor de la API de TMDB (códigos HTTP 5xx o respuestas inesperadas).
+/// Representa un error interno del servidor de la API de TMDB
+/// (códigos HTTP 5xx o respuestas inesperadas).
 ///
 /// ### Ejemplo de uso:
 /// ```dart
@@ -41,7 +43,8 @@ class ServerFailure extends Failure {
   String get userMessage => message;
 }
 
-/// Representa un error cuando un recurso (por ejemplo, una película o actor) no se encuentra (código HTTP 404).
+/// Representa un error cuando un recurso (por ejemplo, una película o
+/// actor) no se encuentra (código HTTP 404).
 ///
 /// ### Ejemplo de uso:
 /// ```dart
@@ -56,7 +59,8 @@ class NotFoundFailure extends Failure {
   String get userMessage => message;
 }
 
-/// Representa un error de autenticación o clave de API inválida/expirada (código HTTP 401).
+/// Representa un error de autenticación o clave de API inválida/expirada
+/// (código HTTP 401).
 ///
 /// ### Ejemplo de uso:
 /// ```dart
@@ -71,7 +75,8 @@ class UnauthorizedFailure extends Failure {
   String get userMessage => message;
 }
 
-/// Representa cualquier otro error inesperado o de análisis (parsing) que no encaja en las demás categorías.
+/// Representa cualquier otro error inesperado o de análisis (parsing)
+/// que no encaja en las demás categorías.
 ///
 /// ### Ejemplo de uso:
 /// ```dart

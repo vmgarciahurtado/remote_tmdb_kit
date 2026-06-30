@@ -20,10 +20,10 @@ class FakeRequestInterceptorHandler implements RequestInterceptorHandler {
 }
 
 class FakeResponseInterceptorHandler implements ResponseInterceptorHandler {
-  Response? nextResponse;
+  Response<dynamic>? nextResponse;
 
   @override
-  void next(Response response) {
+  void next(Response<dynamic> response) {
     nextResponse = response;
   }
 
@@ -239,7 +239,6 @@ void main() {
         'then throws UnexpectedFailure', () async {
       adapter.exceptionToThrow = DioException(
         requestOptions: RequestOptions(path: '/test'),
-        type: DioExceptionType.unknown,
         error: Exception('other'),
       );
 
