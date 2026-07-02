@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
+import 'package:test/test.dart';
 
 class FakeHttpService implements HttpService {
   late Object? response;
@@ -35,7 +35,6 @@ void main() {
   late RemoteMovieRepositoryImpl repository;
 
   const String tImageBaseUrl = 'https://image.tmdb.org/t/p/w500';
-  const String tNoImageUrl = 'https://img.com/fallback.jpg';
   const String tActorImageBaseUrl = 'https://image.tmdb.org/t/p/w185';
 
   setUp(() {
@@ -45,28 +44,45 @@ void main() {
       const ImageUrlResolver(
         imageBaseUrl: tImageBaseUrl,
         actorImageBaseUrl: tActorImageBaseUrl,
-        noImageUrl: tNoImageUrl,
       ),
     );
   });
 
   group('RemoteMovieRepositoryImpl.getNowPlaying', () {
     test('given a successful http request when getNowPlaying is called '
-        'then returns success with movies', () async {
+        'then returns success with a paged result of movies', () async {
       fakeHttpService.response = _tMovieResponseJson();
 
-      final Result<List<Movie>> result = await repository.getNowPlaying();
+      final Result<PagedResult<Movie>> result = await repository
+          .getNowPlaying();
 
-      expect(result, isA<Success<List<Movie>>>());
-      final List<Movie> movies = (result as Success<List<Movie>>).data;
-      expect(movies.length, 1);
-      expect(movies.first.id, 1);
+      expect(result, isA<Success<PagedResult<Movie>>>());
+      final PagedResult<Movie> paged =
+          (result as Success<PagedResult<Movie>>).data;
+      expect(paged.results.length, 1);
+      expect(paged.results.first.id, 1);
       expect(
-        movies.first.posterPath,
+        paged.results.first.posterPath,
         'https://image.tmdb.org/t/p/w500/poster.jpg',
       );
+      expect(paged.page, 1);
+      expect(paged.totalPages, 10);
+      expect(paged.totalResults, 200);
+      expect(paged.hasNextPage, isTrue);
       expect(fakeHttpService.lastPath, 'movie/now_playing');
       expect(fakeHttpService.lastMethod, HttpMethod.get);
+    });
+
+    test('given a successful http request when getNowPlaying is called '
+        'then the returned movie list is unmodifiable', () async {
+      fakeHttpService.response = _tMovieResponseJson();
+
+      final Result<PagedResult<Movie>> result = await repository
+          .getNowPlaying();
+
+      final PagedResult<Movie> paged =
+          (result as Success<PagedResult<Movie>>).data;
+      expect(() => paged.results.clear(), throwsUnsupportedError);
     });
 
     test('given http service throws ConnectionFailure when getNowPlaying is '
@@ -74,10 +90,12 @@ void main() {
       fakeHttpService.shouldThrow = true;
       fakeHttpService.exception = const ConnectionFailure();
 
-      final Result<List<Movie>> result = await repository.getNowPlaying();
+      final Result<PagedResult<Movie>> result = await repository
+          .getNowPlaying();
 
-      expect(result, isA<FailureResult<List<Movie>>>());
-      final Failure failure = (result as FailureResult<List<Movie>>).failure;
+      expect(result, isA<FailureResult<PagedResult<Movie>>>());
+      final Failure failure =
+          (result as FailureResult<PagedResult<Movie>>).failure;
       expect(failure, isA<ConnectionFailure>());
     });
   });
@@ -87,11 +105,12 @@ void main() {
         'then returns success with movies', () async {
       fakeHttpService.response = _tMovieResponseJson();
 
-      final Result<List<Movie>> result = await repository.getPopular();
+      final Result<PagedResult<Movie>> result = await repository.getPopular();
 
-      expect(result, isA<Success<List<Movie>>>());
-      final List<Movie> movies = (result as Success<List<Movie>>).data;
-      expect(movies.first.id, 1);
+      expect(result, isA<Success<PagedResult<Movie>>>());
+      final PagedResult<Movie> paged =
+          (result as Success<PagedResult<Movie>>).data;
+      expect(paged.results.first.id, 1);
       expect(fakeHttpService.lastPath, 'movie/popular');
       expect(fakeHttpService.lastMethod, HttpMethod.get);
     });
@@ -102,13 +121,14 @@ void main() {
         'then returns success with movies', () async {
       fakeHttpService.response = _tMovieResponseJson();
 
-      final Result<List<Movie>> result = await repository.searchMovies(
+      final Result<PagedResult<Movie>> result = await repository.searchMovies(
         'batman',
       );
 
-      expect(result, isA<Success<List<Movie>>>());
-      final List<Movie> movies = (result as Success<List<Movie>>).data;
-      expect(movies.first.title, 'Batman');
+      expect(result, isA<Success<PagedResult<Movie>>>());
+      final PagedResult<Movie> paged =
+          (result as Success<PagedResult<Movie>>).data;
+      expect(paged.results.first.title, 'Batman');
       expect(fakeHttpService.lastPath, 'search/movie');
       expect(fakeHttpService.lastMethod, HttpMethod.get);
       expect(fakeHttpService.lastQueryParameters, <String, dynamic>{
@@ -121,7 +141,7 @@ void main() {
         'then includes filter parameters in query parameters', () async {
       fakeHttpService.response = _tMovieResponseJson();
 
-      final Result<List<Movie>> result = await repository.searchMovies(
+      final Result<PagedResult<Movie>> result = await repository.searchMovies(
         'batman',
         page: 2,
         filter: const MovieSearchFilter(
@@ -130,7 +150,7 @@ void main() {
         ),
       );
 
-      expect(result, isA<Success<List<Movie>>>());
+      expect(result, isA<Success<PagedResult<Movie>>>());
       expect(fakeHttpService.lastQueryParameters, <String, dynamic>{
         'query': 'batman',
         'page': 2,
@@ -160,20 +180,17 @@ void main() {
     });
   });
 
-  group('MovieRepository.create', () {
-    test(
-      'creates a MovieRepository instance with default logging to false',
-      () {
-        final MovieRepository repo = MovieRepository.create(
-          const TmdbConfig(apiKey: 'test_key'),
-        );
-        expect(repo, isA<MovieRepository>());
-      },
-    );
+  group('createTmdbMovieRepository', () {
+    test('creates a MovieRepository instance with an api key (v3)', () {
+      final MovieRepository repo = createTmdbMovieRepository(
+        const TmdbConfig(apiKey: 'test_key'),
+      );
+      expect(repo, isA<MovieRepository>());
+    });
 
-    test('creates a MovieRepository instance with logging enabled', () {
-      final MovieRepository repo = MovieRepository.create(
-        const TmdbConfig(apiKey: 'test_key', enableLogging: true),
+    test('creates a MovieRepository instance with an access token (v4)', () {
+      final MovieRepository repo = createTmdbMovieRepository(
+        const TmdbConfig(accessToken: 'test_token', enableLogging: true),
       );
       expect(repo, isA<MovieRepository>());
     });

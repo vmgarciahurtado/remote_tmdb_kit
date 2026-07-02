@@ -18,5 +18,5 @@ final Provider<MovieRepository> movieRepositoryProvider =
           ? baseConfig.copyWith(enableLogging: true, language: 'en-US')
           : baseConfig;
 
-      return MovieRepository.create(config);
+      return createTmdbMovieRepository(config);
     });

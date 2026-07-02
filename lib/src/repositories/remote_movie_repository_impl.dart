@@ -8,6 +8,7 @@ import '../mappers/remote_movie_mapper.dart';
 import '../models/actor.dart';
 import '../models/movie.dart';
 import '../models/movie_search_filter.dart';
+import '../models/paged_result.dart';
 import '../network/http_method.dart';
 import '../network/http_service.dart';
 import '../result/result.dart';
@@ -25,65 +26,22 @@ class RemoteMovieRepositoryImpl implements MovieRepository {
   final ImageUrlResolver _imageUrlResolver;
 
   @override
-  Future<Result<List<Movie>>> getNowPlaying({int page = 1}) =>
-      executeRepositoryCall(() async {
-        final Map<String, dynamic> response = await _httpService
-            .request<Map<String, dynamic>>(
-              'movie/now_playing',
-              method: HttpMethod.get,
-              queryParameters: <String, dynamic>{'page': page},
-            );
-        final RemoteMovieResponse data = RemoteMovieResponse.fromJson(response);
-        return data.results
-            .map(
-              (RemoteMovieModel m) =>
-                  RemoteMovieMapper.toEntity(m, _imageUrlResolver),
-            )
-            .toList();
-      });
+  Future<Result<PagedResult<Movie>>> getNowPlaying({int page = 1}) =>
+      _fetchMoviePage('movie/now_playing', <String, dynamic>{'page': page});
 
   @override
-  Future<Result<List<Movie>>> getPopular({int page = 1}) =>
-      executeRepositoryCall(() async {
-        final Map<String, dynamic> response = await _httpService
-            .request<Map<String, dynamic>>(
-              'movie/popular',
-              method: HttpMethod.get,
-              queryParameters: <String, dynamic>{'page': page},
-            );
-        final RemoteMovieResponse data = RemoteMovieResponse.fromJson(response);
-        return data.results
-            .map(
-              (RemoteMovieModel m) =>
-                  RemoteMovieMapper.toEntity(m, _imageUrlResolver),
-            )
-            .toList();
-      });
+  Future<Result<PagedResult<Movie>>> getPopular({int page = 1}) =>
+      _fetchMoviePage('movie/popular', <String, dynamic>{'page': page});
 
   @override
-  Future<Result<List<Movie>>> searchMovies(
+  Future<Result<PagedResult<Movie>>> searchMovies(
     String query, {
     int page = 1,
     MovieSearchFilter? filter,
-  }) => executeRepositoryCall(() async {
-    final Map<String, dynamic> queryParams = <String, dynamic>{
-      'query': query,
-      'page': page,
-      ...?filter?.toQueryParameters(),
-    };
-    final Map<String, dynamic> response = await _httpService
-        .request<Map<String, dynamic>>(
-          'search/movie',
-          method: HttpMethod.get,
-          queryParameters: queryParams,
-        );
-    final RemoteMovieResponse data = RemoteMovieResponse.fromJson(response);
-    return data.results
-        .map(
-          (RemoteMovieModel m) =>
-              RemoteMovieMapper.toEntity(m, _imageUrlResolver),
-        )
-        .toList();
+  }) => _fetchMoviePage('search/movie', <String, dynamic>{
+    'query': query,
+    'page': page,
+    ...?filter?.toQueryParameters(),
   });
 
   @override
@@ -95,11 +53,37 @@ class RemoteMovieRepositoryImpl implements MovieRepository {
               method: HttpMethod.get,
             );
         final RemoteCastResponse data = RemoteCastResponse.fromJson(response);
-        return data.cast
-            .map(
-              (RemoteActorModel a) =>
-                  RemoteActorMapper.toEntity(a, _imageUrlResolver),
-            )
-            .toList();
+        return List<Actor>.unmodifiable(
+          data.cast.map(
+            (RemoteActorModel a) =>
+                RemoteActorMapper.toEntity(a, _imageUrlResolver),
+          ),
+        );
       });
+
+  /// Consulta un endpoint paginado de películas y mapea la respuesta a un
+  /// [PagedResult] de entidades de dominio.
+  Future<Result<PagedResult<Movie>>> _fetchMoviePage(
+    String path,
+    Map<String, dynamic> queryParameters,
+  ) => executeRepositoryCall(() async {
+    final Map<String, dynamic> response = await _httpService
+        .request<Map<String, dynamic>>(
+          path,
+          method: HttpMethod.get,
+          queryParameters: queryParameters,
+        );
+    final RemoteMovieResponse data = RemoteMovieResponse.fromJson(response);
+    return PagedResult<Movie>(
+      page: data.page,
+      results: List<Movie>.unmodifiable(
+        data.results.map(
+          (RemoteMovieModel m) =>
+              RemoteMovieMapper.toEntity(m, _imageUrlResolver),
+        ),
+      ),
+      totalPages: data.totalPages,
+      totalResults: data.totalResults,
+    );
+  });
 }

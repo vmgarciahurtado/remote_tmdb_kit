@@ -16,7 +16,13 @@ Future<Result<T>> executeRepositoryCall<T>(Future<T> Function() call) async {
     return Success<T>(data);
   } on Failure catch (e) {
     return FailureResult<T>(e);
-  } catch (e) {
-    return FailureResult<T>(UnexpectedFailure(e.toString()));
+  } catch (e, stackTrace) {
+    return FailureResult<T>(
+      UnexpectedFailure(
+        message: e.toString(),
+        cause: e,
+        stackTrace: stackTrace,
+      ),
+    );
   }
 }

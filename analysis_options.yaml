@@ -3,19 +3,18 @@
 #
 # The issues identified by the analyzer are surfaced in the UI of Dart-enabled
 # IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# invoked from the command line by running `dart analyze`.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
+# Base ruleset for pure Dart packages; the rules below extend/override it.
+include: package:lints/recommended.yaml
 
 analyzer:
   # Exclude generated files and build directories
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
-    - "**/generated_plugin_registrant.dart"
     - "build/**"
-  
+
   # Enable stricter type checking
   language:
     strict-casts: true
@@ -58,11 +57,7 @@ linter:
     avoid_print: true
     # Avoid relative imports
     avoid_relative_lib_imports: true
-    # Avoid unnecessary containers
-    avoid_unnecessary_containers: true
-    # Avoid web libraries in Flutter
-    avoid_web_libraries_in_flutter: true
-    
+
     # === DESIGN RULES ===
     # Prefer const constructors
     prefer_const_constructors: true
@@ -78,7 +73,7 @@ linter:
     prefer_final_locals: true
     # Prefer final in for-each
     prefer_final_in_for_each: true
-    
+
     # === ERROR PREVENTION ===
     # Avoid slow async
     avoid_slow_async_io: true
@@ -88,11 +83,11 @@ linter:
     cancel_subscriptions: true
     # Close sinks
     close_sinks: true
-    
+
     # === DOCUMENTATION ===
     # Public member API docs
-    public_member_api_docs: false # Set to true for libraries
-    
+    public_member_api_docs: true
+
     # === FORMATTING ===
     # Curly braces in flow control structures
     curly_braces_in_flow_control_structures: true
@@ -104,12 +99,10 @@ linter:
     lines_longer_than_80_chars: true
     # Trailing commas
     require_trailing_commas: true
-    
+
     # === PERFORMANCE ===
     # Avoid function literals in foreach calls
     avoid_function_literals_in_foreach_calls: true
-    # Use key in widget constructors
-    use_key_in_widget_constructors: true
     # Prefer collection literals
     prefer_collection_literals: true
     # Prefer for elements to map fromIterable
@@ -118,7 +111,7 @@ linter:
     prefer_if_elements_to_conditional_expressions: true
     # Prefer spread collections
     prefer_spread_collections: true
-    
+
     # === TYPE SAFETY RULES ===
     # Avoid dynamic calls
     avoid_dynamic_calls: true
@@ -128,7 +121,7 @@ linter:
     omit_local_variable_types: false
     # Avoid annotating with dynamic when not required
     annotate_overrides: true
-    
+
     # === ADDITIONAL HELPFUL RULES ===
     # Avoid redundant argument values
     avoid_redundant_argument_values: true
@@ -138,20 +131,8 @@ linter:
     deprecated_member_use_from_same_package: true
     # No duplicate case values
     no_duplicate_case_values: true
-    # No logic in create state
-    no_logic_in_create_state: true
     # Prefer interpolation to compose strings
     prefer_interpolation_to_compose_strings: true
-    # Sized box for whitespace
-    sized_box_for_whitespace: true
-    # Sort child properties last
-    sort_child_properties_last: true
-    # Use build context synchronously
-    use_build_context_synchronously: true
-    # Use colored box
-    use_colored_box: true
-    # Use decorated box
-    use_decorated_box: true
     # Avoid inferring anything
     avoid_types_on_closure_parameters: false
     # Prefer generic function type aliases

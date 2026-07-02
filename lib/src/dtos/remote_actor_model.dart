@@ -1,3 +1,7 @@
+// DTO interno del paquete (no exportado); sus miembros replican 1:1 el
+// contrato JSON de TMDB y no forman parte de la API pública documentada.
+// ignore_for_file: public_member_api_docs
+
 /// DTO de deserialización para actores individuales desde la respuesta
 /// JSON de TMDB.
 class RemoteActorModel {

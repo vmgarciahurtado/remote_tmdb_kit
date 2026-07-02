@@ -38,10 +38,13 @@ final FutureProvider<List<Movie>> movieSearchProvider =
       await debounce.future;
 
       final MovieRepository repository = ref.watch(movieRepositoryProvider);
-      final Result<List<Movie>> result = await repository.searchMovies(query);
+      final Result<PagedResult<Movie>> result = await repository.searchMovies(
+        query,
+      );
       return switch (result) {
-        Success<List<Movie>>(data: final List<Movie> movies) => movies,
-        FailureResult<List<Movie>>(failure: final Failure failure) =>
+        Success<PagedResult<Movie>>(data: final PagedResult<Movie> paged) =>
+          paged.results,
+        FailureResult<PagedResult<Movie>>(failure: final Failure failure) =>
           throw failure,
       };
     });

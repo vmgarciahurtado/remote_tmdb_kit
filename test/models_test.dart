@@ -1,9 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_actor_model.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_cast_response.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_movie_response.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('RemoteMovieModel.fromJson', () {
@@ -34,6 +34,23 @@ void main() {
         expect(model.title, 'Batman');
         expect(model.posterPath, '/batman.jpg');
         expect(model.genreIds, <int>[28, 12]);
+      },
+    );
+
+    test(
+      'given a JSON map without poster or backdrop when fromJson is called '
+      'then both paths are null',
+      () {
+        final Map<String, Object?> json = <String, Object?>{
+          'id': 1,
+          'poster_path': null,
+          'backdrop_path': null,
+        };
+
+        final RemoteMovieModel model = RemoteMovieModel.fromJson(json);
+
+        expect(model.posterPath, isNull);
+        expect(model.backdropPath, isNull);
       },
     );
   });
@@ -124,6 +141,84 @@ void main() {
     );
   });
 
+  group('Movie equality', () {
+    test('two movies with the same values are equal', () {
+      final Movie a = _tMovie();
+      final Movie b = _tMovie();
+
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+    });
+
+    test('two movies with different values are not equal', () {
+      final Movie a = _tMovie();
+      final Movie b = _tMovie(title: 'Other title');
+
+      expect(a, isNot(equals(b)));
+    });
+
+    test('toString includes the id and title', () {
+      expect(_tMovie().toString(), 'Movie(id: 1, title: Batman)');
+    });
+  });
+
+  group('Actor equality', () {
+    test('two actors with the same values are equal', () {
+      const Actor a = Actor(
+        id: 10,
+        name: 'Christian Bale',
+        character: 'Bruce Wayne',
+        profilePath: '/bale.jpg',
+      );
+      const Actor b = Actor(
+        id: 10,
+        name: 'Christian Bale',
+        character: 'Bruce Wayne',
+        profilePath: '/bale.jpg',
+      );
+
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+    });
+
+    test('two actors with different values are not equal', () {
+      const Actor a = Actor(
+        id: 10,
+        name: 'Christian Bale',
+        character: 'Bruce Wayne',
+        profilePath: null,
+      );
+      const Actor b = Actor(
+        id: 11,
+        name: 'Michael Caine',
+        character: 'Alfred',
+        profilePath: null,
+      );
+
+      expect(a, isNot(equals(b)));
+    });
+  });
+
+  group('PagedResult', () {
+    test('hasNextPage is true while page is below totalPages', () {
+      const PagedResult<int> first = PagedResult<int>(
+        page: 1,
+        results: <int>[1, 2],
+        totalPages: 3,
+        totalResults: 6,
+      );
+      const PagedResult<int> last = PagedResult<int>(
+        page: 3,
+        results: <int>[5, 6],
+        totalPages: 3,
+        totalResults: 6,
+      );
+
+      expect(first.hasNextPage, isTrue);
+      expect(last.hasNextPage, isFalse);
+    });
+  });
+
   group('MovieSearchFilter', () {
     test('toQueryParameters returns only non-null values', () {
       const MovieSearchFilter filter = MovieSearchFilter(
@@ -176,3 +271,20 @@ void main() {
     });
   });
 }
+
+Movie _tMovie({String title = 'Batman'}) => Movie(
+  id: 1,
+  title: title,
+  originalTitle: 'Batman',
+  overview: 'Gotham hero',
+  posterPath: '/poster.jpg',
+  backdropPath: '/backdrop.jpg',
+  releaseDate: '2022-03-04',
+  popularity: 98.5,
+  voteAverage: 7.3,
+  voteCount: 5432,
+  genreIds: const <int>[28, 12],
+  adult: false,
+  video: false,
+  originalLanguage: 'en',
+);

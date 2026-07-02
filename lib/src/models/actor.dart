@@ -1,5 +1,8 @@
 /// Modelo de dominio que representa a un actor o miembro del reparto de
 /// una película.
+///
+/// Implementa igualdad estructural: dos instancias con los mismos valores
+/// son iguales, lo que facilita comparaciones en gestores de estado y tests.
 class Actor {
   /// Crea una instancia inmutable de [Actor].
   const Actor({
@@ -22,4 +25,22 @@ class Actor {
   ///
   /// Puede ser `null` si TMDB no provee una imagen para este actor.
   final String? profilePath;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is Actor &&
+        other.id == id &&
+        other.name == name &&
+        other.character == character &&
+        other.profilePath == profilePath;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, character, profilePath);
+
+  @override
+  String toString() => 'Actor(id: $id, name: $name)';
 }

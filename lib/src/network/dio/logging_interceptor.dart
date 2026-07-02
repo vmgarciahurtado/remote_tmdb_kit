@@ -1,28 +1,58 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
-/// Interceptor de `Dio` encargado de registrar logs detallados de red en
-/// consola.
+/// Interceptor de `Dio` encargado de registrar logs detallados de red.
 ///
-/// Solo realiza impresiones en consola si la aplicación se ejecuta en
-/// modo de depuración (`kDebugMode`).
+/// Antes de emitir cada línea redacta las credenciales sensibles: el
+/// parámetro de consulta `api_key` y la cabecera `Authorization` se
+/// enmascaran para que la clave nunca quede expuesta en los logs.
+///
+/// Las líneas se emiten a través de la función [log] inyectada, de modo
+/// que el paquete no depende de Flutter ni decide el destino de los logs.
 class LoggingInterceptor extends Interceptor {
-  /// Crea una instancia del interceptor de logs.
-  LoggingInterceptor();
+  /// Crea el interceptor con la función [log] que recibirá cada línea.
+  LoggingInterceptor(this.log);
+
+  /// Función destino de cada línea de log.
+  final void Function(String message) log;
+
+  // Sin caracteres que Uri.replace percent-encodee, para que la máscara
+  // se lea tal cual en la URL registrada.
+  static const String _mask = 'REDACTED';
+  static const String _divider =
+      '─────────────────────────────────────────────';
+
+  Uri _redactUri(Uri uri) {
+    if (!uri.queryParameters.containsKey('api_key')) {
+      return uri;
+    }
+    return uri.replace(
+      queryParameters: <String, String>{
+        ...uri.queryParameters,
+        'api_key': _mask,
+      },
+    );
+  }
+
+  Map<String, dynamic> _redactHeaders(Map<String, dynamic> headers) {
+    return <String, dynamic>{
+      for (final MapEntry<String, dynamic> entry in headers.entries)
+        entry.key: entry.key.toLowerCase() == 'authorization'
+            ? _mask
+            : entry.value,
+    };
+  }
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (kDebugMode) {
-      debugPrint('┌─────────────────────────────────────────────────');
-      debugPrint('│ REQUEST');
-      debugPrint('├─────────────────────────────────────────────────');
-      debugPrint('│ ${options.method} ${options.uri}');
-      debugPrint('│ Headers: ${options.headers}');
-      if (options.data != null) {
-        debugPrint('│ Body: ${options.data}');
-      }
-      debugPrint('└─────────────────────────────────────────────────');
+    log('┌$_divider');
+    log('│ REQUEST');
+    log('├$_divider');
+    log('│ ${options.method} ${_redactUri(options.uri)}');
+    log('│ Headers: ${_redactHeaders(options.headers)}');
+    if (options.data != null) {
+      log('│ Body: ${options.data}');
     }
+    log('└$_divider');
     handler.next(options);
   }
 
@@ -31,34 +61,34 @@ class LoggingInterceptor extends Interceptor {
     Response<dynamic> response,
     ResponseInterceptorHandler handler,
   ) {
-    if (kDebugMode) {
-      debugPrint('┌─────────────────────────────────────────────────');
-      debugPrint('│ RESPONSE');
-      debugPrint('├─────────────────────────────────────────────────');
-      debugPrint(
-        '│ ${response.requestOptions.method} ${response.requestOptions.uri}',
-      );
-      debugPrint('│ Status: ${response.statusCode}');
-      debugPrint('│ Data: ${response.data}');
-      debugPrint('└─────────────────────────────────────────────────');
-    }
+    log('┌$_divider');
+    log('│ RESPONSE');
+    log('├$_divider');
+    log(
+      '│ ${response.requestOptions.method} '
+      '${_redactUri(response.requestOptions.uri)}',
+    );
+    log('│ Status: ${response.statusCode}');
+    log('│ Data: ${response.data}');
+    log('└$_divider');
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (kDebugMode) {
-      debugPrint('┌─────────────────────────────────────────────────');
-      debugPrint('│ ERROR');
-      debugPrint('├─────────────────────────────────────────────────');
-      debugPrint('│ ${err.requestOptions.method} ${err.requestOptions.uri}');
-      debugPrint('│ Status: ${err.response?.statusCode}');
-      debugPrint('│ Error: ${err.message}');
-      if (err.response?.data != null) {
-        debugPrint('│ Data: ${err.response?.data}');
-      }
-      debugPrint('└─────────────────────────────────────────────────');
+    log('┌$_divider');
+    log('│ ERROR');
+    log('├$_divider');
+    log(
+      '│ ${err.requestOptions.method} '
+      '${_redactUri(err.requestOptions.uri)}',
+    );
+    log('│ Status: ${err.response?.statusCode}');
+    log('│ Error: ${err.message}');
+    if (err.response?.data != null) {
+      log('│ Data: ${err.response?.data}');
     }
+    log('└$_divider');
     handler.next(err);
   }
 }

@@ -1,8 +1,10 @@
 export 'src/config/tmdb_config.dart';
 export 'src/errors/failures.dart';
+export 'src/factory/create_tmdb_movie_repository.dart';
 export 'src/models/actor.dart';
 export 'src/models/movie.dart';
 export 'src/models/movie_search_filter.dart';
+export 'src/models/paged_result.dart';
 export 'src/network/http_method.dart' show HttpMethod;
 export 'src/network/http_service.dart' show HttpService;
 export 'src/repositories/movie_repository.dart' show MovieRepository;

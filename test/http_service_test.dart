@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 import 'package:remote_tmdb_kit/src/network/dio/dio_http_service.dart';
 import 'package:remote_tmdb_kit/src/network/dio/logging_interceptor.dart';
+import 'package:test/test.dart';
 
 // Fake implementations for Interceptor Handlers using noSuchMethod fallback
 class FakeRequestInterceptorHandler implements RequestInterceptorHandler {
@@ -66,10 +66,12 @@ class FakeHttpClientAdapter implements HttpClientAdapter {
 
 void main() {
   group('LoggingInterceptor', () {
+    late List<String> logLines;
     late LoggingInterceptor interceptor;
 
     setUp(() {
-      interceptor = LoggingInterceptor();
+      logLines = <String>[];
+      interceptor = LoggingInterceptor(logLines.add);
     });
 
     test('given an outgoing request without body '
@@ -85,6 +87,7 @@ void main() {
       interceptor.onRequest(options, handler);
 
       expect(handler.nextOptions, options);
+      expect(logLines, isNotEmpty);
     });
 
     test('given an outgoing request with a body '
@@ -101,6 +104,42 @@ void main() {
       interceptor.onRequest(options, handler);
 
       expect(handler.nextOptions, options);
+      expect(logLines.join('\n'), contains('value'));
+    });
+
+    test('given a request with an api_key query parameter '
+        'when onRequest is called '
+        'then the api key is redacted from the logs', () {
+      final RequestOptions options = RequestOptions(
+        path: 'https://api.themoviedb.org/3/movie/popular',
+        method: 'GET',
+        queryParameters: <String, dynamic>{'api_key': 'super_secret_key'},
+      );
+      final FakeRequestInterceptorHandler handler =
+          FakeRequestInterceptorHandler();
+
+      interceptor.onRequest(options, handler);
+
+      final String logged = logLines.join('\n');
+      expect(logged, isNot(contains('super_secret_key')));
+      expect(logged, contains('api_key=REDACTED'));
+    });
+
+    test('given a request with an Authorization header '
+        'when onRequest is called '
+        'then the bearer token is redacted from the logs', () {
+      final RequestOptions options = RequestOptions(
+        path: '/test',
+        method: 'GET',
+        headers: <String, dynamic>{'Authorization': 'Bearer secret_token'},
+      );
+      final FakeRequestInterceptorHandler handler =
+          FakeRequestInterceptorHandler();
+
+      interceptor.onRequest(options, handler);
+
+      final String logged = logLines.join('\n');
+      expect(logged, isNot(contains('secret_token')));
     });
 
     test('given an incoming response '
@@ -118,6 +157,7 @@ void main() {
       interceptor.onResponse(response, handler);
 
       expect(handler.nextResponse, response);
+      expect(logLines.join('\n'), contains('200'));
     });
 
     test('given a request error without response data '
@@ -152,6 +192,7 @@ void main() {
       interceptor.onError(error, handler);
 
       expect(handler.nextError, error);
+      expect(logLines.join('\n'), contains('Internal Server Error'));
     });
   });
 
@@ -209,20 +250,37 @@ void main() {
       );
     });
 
+    test('given a 429 response '
+        'when request is called '
+        'then throws RateLimitFailure', () async {
+      adapter.responseBody = ResponseBody.fromString('', 429);
+
+      expect(
+        () => service.request<dynamic>('/test', method: HttpMethod.get),
+        throwsA(isA<RateLimitFailure>()),
+      );
+    });
+
     test('given a 500 response '
         'when request is called '
-        'then throws ServerFailure', () async {
+        'then throws ServerFailure with the typed status code', () async {
       adapter.responseBody = ResponseBody.fromString('', 500);
 
       expect(
         () => service.request<dynamic>('/test', method: HttpMethod.get),
-        throwsA(isA<ServerFailure>()),
+        throwsA(
+          isA<ServerFailure>().having(
+            (ServerFailure f) => f.statusCode,
+            'statusCode',
+            500,
+          ),
+        ),
       );
     });
 
     test('given a Connection Timeout error '
         'when request is called '
-        'then throws ConnectionFailure', () async {
+        'then throws ConnectionFailure preserving the cause', () async {
       adapter.exceptionToThrow = DioException(
         requestOptions: RequestOptions(path: '/test'),
         type: DioExceptionType.connectionTimeout,
@@ -230,7 +288,13 @@ void main() {
 
       expect(
         () => service.request<dynamic>('/test', method: HttpMethod.get),
-        throwsA(isA<ConnectionFailure>()),
+        throwsA(
+          isA<ConnectionFailure>().having(
+            (ConnectionFailure f) => f.cause,
+            'cause',
+            isA<DioException>(),
+          ),
+        ),
       );
     });
 

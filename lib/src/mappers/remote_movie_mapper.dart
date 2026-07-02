@@ -21,7 +21,7 @@ class RemoteMovieMapper {
         popularity: model.popularity,
         voteAverage: model.voteAverage,
         voteCount: model.voteCount,
-        genreIds: model.genreIds,
+        genreIds: List<int>.unmodifiable(model.genreIds),
         adult: model.adult,
         video: model.video,
         originalLanguage: model.originalLanguage,

@@ -1,3 +1,7 @@
+// DTO interno del paquete (no exportado); sus miembros replican 1:1 el
+// contrato JSON de TMDB y no forman parte de la API pública documentada.
+// ignore_for_file: public_member_api_docs
+
 /// DTO de deserialización para películas individuales desde la respuesta
 /// JSON de TMDB.
 class RemoteMovieModel {
@@ -24,8 +28,8 @@ class RemoteMovieModel {
         title: json['title'] as String? ?? '',
         originalTitle: json['original_title'] as String? ?? '',
         overview: json['overview'] as String? ?? '',
-        posterPath: json['poster_path'] as String? ?? '',
-        backdropPath: json['backdrop_path'] as String? ?? '',
+        posterPath: json['poster_path'] as String?,
+        backdropPath: json['backdrop_path'] as String?,
         releaseDate: json['release_date'] as String? ?? '',
         popularity: (json['popularity'] as num?)?.toDouble() ?? 0.0,
         voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
@@ -44,8 +48,8 @@ class RemoteMovieModel {
   final String title;
   final String originalTitle;
   final String overview;
-  final String posterPath;
-  final String backdropPath;
+  final String? posterPath;
+  final String? backdropPath;
   final String releaseDate;
   final double popularity;
   final double voteAverage;

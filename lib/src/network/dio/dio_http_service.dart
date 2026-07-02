@@ -7,7 +7,8 @@ import '../http_service.dart';
 ///
 /// Se encarga de mapear las excepciones propias de `DioException` a las
 /// fallas del dominio de nuestra librería (`ConnectionFailure`,
-/// `ServerFailure`, etc.).
+/// `ServerFailure`, etc.), conservando el error original y su traza de
+/// pila para facilitar la depuración.
 class DioHttpService implements HttpService {
   final Dio _dio;
 
@@ -34,34 +35,48 @@ class DioHttpService implements HttpService {
       );
 
       if (response.data == null) {
-        throw const UnexpectedFailure('La respuesta del servidor está vacía.');
+        throw const UnexpectedFailure(
+          message: 'La respuesta del servidor está vacía.',
+        );
       }
 
       return response.data!;
-    } on DioException catch (e) {
-      throw _mapDioExceptionToFailure(e);
-    } catch (e) {
-      throw UnexpectedFailure(e.toString());
+    } on Failure {
+      rethrow;
+    } on DioException catch (e, stackTrace) {
+      throw _mapDioExceptionToFailure(e, stackTrace);
+    } catch (e, stackTrace) {
+      throw UnexpectedFailure(
+        message: e.toString(),
+        cause: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
-  Failure _mapDioExceptionToFailure(DioException e) {
+  Failure _mapDioExceptionToFailure(DioException e, StackTrace stackTrace) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
-      return const ConnectionFailure();
+      return ConnectionFailure(cause: e, stackTrace: stackTrace);
     }
 
     final int? statusCode = e.response?.statusCode;
     if (statusCode == null) {
-      return const UnexpectedFailure();
+      return UnexpectedFailure(cause: e, stackTrace: stackTrace);
     }
 
     return switch (statusCode) {
-      401 => const UnauthorizedFailure(),
-      404 => const NotFoundFailure(),
-      _ => ServerFailure('Error del servidor: $statusCode'),
+      401 => UnauthorizedFailure(cause: e, stackTrace: stackTrace),
+      404 => NotFoundFailure(cause: e, stackTrace: stackTrace),
+      429 => RateLimitFailure(cause: e, stackTrace: stackTrace),
+      _ => ServerFailure(
+        message: 'Error del servidor: $statusCode',
+        statusCode: statusCode,
+        cause: e,
+        stackTrace: stackTrace,
+      ),
     };
   }
 }

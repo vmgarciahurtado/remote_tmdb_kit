@@ -1,18 +1,16 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_tmdb_kit/remote_tmdb_kit.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_actor_model.dart';
 import 'package:remote_tmdb_kit/src/dtos/remote_movie_model.dart';
 import 'package:remote_tmdb_kit/src/mappers/remote_actor_mapper.dart';
 import 'package:remote_tmdb_kit/src/mappers/remote_movie_mapper.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('RemoteMovieMapper.toEntity', () {
     const String tImageBaseUrl = 'https://image.tmdb.org/t/p/w500';
-    const String tNoImageUrl = 'https://image.tmdb.org/t/p/w500/fallback.jpg';
     const ImageUrlResolver tResolver = ImageUrlResolver(
       imageBaseUrl: tImageBaseUrl,
       actorImageBaseUrl: '',
-      noImageUrl: tNoImageUrl,
     );
 
     test('given a model with a non-empty poster path when toEntity is called '
@@ -24,22 +22,32 @@ void main() {
       expect(entity.posterPath, 'https://image.tmdb.org/t/p/w500/poster.jpg');
     });
 
-    test('given a model with an empty poster path when toEntity is called '
-        'then the fallback image URL is used', () {
-      final RemoteMovieModel model = _tMovieModel(posterPath: '');
+    test('given a model without a poster path when toEntity is called '
+        'then posterPath is null in the entity', () {
+      final RemoteMovieModel model = _tMovieModel(posterPath: null);
 
       final Movie entity = RemoteMovieMapper.toEntity(model, tResolver);
 
-      expect(entity.posterPath, tNoImageUrl);
+      expect(entity.posterPath, isNull);
     });
 
-    test('given a model with an empty backdrop path when toEntity is called '
-        'then the fallback image URL is used for the backdrop', () {
-      final RemoteMovieModel model = _tMovieModel(backdropPath: '');
+    test('given a model without a backdrop path when toEntity is called '
+        'then backdropPath is null in the entity', () {
+      final RemoteMovieModel model = _tMovieModel(backdropPath: null);
 
       final Movie entity = RemoteMovieMapper.toEntity(model, tResolver);
 
-      expect(entity.backdropPath, tNoImageUrl);
+      expect(entity.backdropPath, isNull);
+    });
+
+    test('given a mapped entity when genreIds is modified '
+        'then throws because the list is unmodifiable', () {
+      final Movie entity = RemoteMovieMapper.toEntity(
+        _tMovieModel(),
+        tResolver,
+      );
+
+      expect(() => entity.genreIds.add(99), throwsUnsupportedError);
     });
   });
 
@@ -48,7 +56,6 @@ void main() {
     const ImageUrlResolver tResolver = ImageUrlResolver(
       imageBaseUrl: '',
       actorImageBaseUrl: tActorImageBaseUrl,
-      noImageUrl: '',
     );
 
     test('given an actor with a profile path when toEntity is called '
@@ -82,8 +89,8 @@ void main() {
 }
 
 RemoteMovieModel _tMovieModel({
-  String posterPath = '/poster.jpg',
-  String backdropPath = '/backdrop.jpg',
+  String? posterPath = '/poster.jpg',
+  String? backdropPath = '/backdrop.jpg',
 }) => RemoteMovieModel(
   id: 1,
   title: 'Test Movie',
